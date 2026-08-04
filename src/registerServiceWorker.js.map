@@ -1,0 +1,1 @@
+{"version":3,"file":"registerServiceWorker.js","sourceRoot":"","sources":["registerServiceWorker.ts"],"names":[],"mappings":"AAAA,MAAM,UAAU,qBAAqB;IACnC,IAAI,eAAe,IAAI,SAAS,EAAE,CAAC;QACjC,SAAS,CAAC,aAAa,CAAC,QAAQ,CAAC,QAAQ,CAAC,CAAC,KAAK,CAAC,CAAC,KAAK,EAAE,EAAE;YACzD,OAAO,CAAC,IAAI,CAAC,qCAAqC,EAAE,KAAK,CAAC,CAAA;QAC5D,CAAC,CAAC,CAAA;IACJ,CAAC;AACH,CAAC"}

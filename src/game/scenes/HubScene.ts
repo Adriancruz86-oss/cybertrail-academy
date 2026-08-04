@@ -62,7 +62,7 @@ export class HubScene extends Phaser.Scene {
 
     this.player.body.setVelocity(0, 0)
 
-    this.keys = this.input.keyboard.addKeys({
+   this.keys = this.input.keyboard!.addKeys({
       up: 'W',
       down: 'S',
       left: 'A',

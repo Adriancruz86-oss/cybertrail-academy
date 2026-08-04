@@ -25,11 +25,11 @@ function updateStatusForCorrect(progress: ConceptProgressState, evidenceType: Ev
     progress.reasoningSuccesses += 1
   }
 
-  if (progress.currentCompetencyStreak >= 1) {
-    progress.status = 'competent'
-  } else {
-    progress.status = 'applied'
-  }
+  if (progress.currentCompetencyStreak >= 2) {
+  progress.status = 'competent'
+} else {
+  progress.status = 'applied'
+}
 }
 
 export const MasteryService = {

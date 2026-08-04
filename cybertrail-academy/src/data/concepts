@@ -1,0 +1,106 @@
+{
+  "aes": {
+    "name": "AES",
+    "fullName": "Advanced Encryption Standard",
+    "domain": "general-security-concepts",
+    "category": "cryptography",
+    "plainDefinition": "Fast symmetric encryption used to protect large amounts of data.",
+    "technicalDefinition": "A symmetric block cipher commonly used to protect data at rest and in transit.",
+    "whyItExists": "To provide efficient confidentiality for data.",
+    "useCases": [
+      "File encryption",
+      "Disk encryption",
+      "VPN traffic",
+      "TLS session encryption"
+    ],
+    "notFor": [
+      "Hashing",
+      "Digital signatures",
+      "Certificate issuance"
+    ],
+    "prerequisites": [
+      "symmetric-encryption"
+    ],
+    "relatedConcepts": [
+      "rsa",
+      "ecdh",
+      "tls",
+      "bitlocker"
+    ],
+    "commonMisconceptions": [
+      "AES is not asymmetric.",
+      "AES does not verify identity by itself."
+    ],
+    "masteryRequirements": {
+      "competencyDemonstrations": 2,
+      "distinctContexts": 2,
+      "delayedReviewRequired": true
+    }
+  },
+  "https": {
+    "name": "HTTPS",
+    "fullName": "Hypertext Transfer Protocol Secure",
+    "domain": "general-security-concepts",
+    "category": "networking",
+    "plainDefinition": "An extension of HTTP that uses encryption for secure communication over a computer network.",
+    "technicalDefinition": "A protocol for secure communication over a computer network, widely used on the Internet.",
+    "whyItExists": "To provide a secure channel over an insecure network.",
+    "useCases": [
+      "Secure web browsing",
+      "Online banking",
+      "E-commerce transactions"
+    ],
+    "notFor": [
+      "Non-web applications",
+      "Insecure protocols"
+    ],
+    "prerequisites": [
+      "tls"
+    ],
+    "relatedConcepts": [
+      "tls",
+      "ssl",
+      "http"
+    ],
+    "commonMisconceptions": [
+      "HTTPS is only for websites.",
+      "HTTPS guarantees complete security."
+    ],
+    "masteryRequirements": {
+      "competencyDemonstrations": 2,
+      "distinctContexts": 2,
+      "delayedReviewRequired": true
+    }
+  },
+  "mfa": {
+    "name": "MFA",
+    "fullName": "Multi-Factor Authentication",
+    "domain": "general-security-concepts",
+    "category": "authentication",
+    "plainDefinition": "A security system that requires more than one form of verification to access an account.",
+    "technicalDefinition": "An authentication method that requires the user to provide two or more verification factors to gain access to a resource.",
+    "whyItExists": "To enhance security by requiring multiple forms of verification.",
+    "useCases": [
+      "Online banking",
+      "Corporate networks",
+      "Email accounts"
+    ],
+    "notFor": [
+      "Single-factor authentication systems"
+    ],
+    "prerequisites": [],
+    "relatedConcepts": [
+      "authentication",
+      "authorization"
+    ],
+    "commonMisconceptions": [
+      "MFA is only for sensitive accounts.",
+      "MFA is foolproof."
+    ],
+    "masteryRequirements": {
+      "competencyDemonstrations": 2,
+      "distinctContexts": 2,
+      "delayedReviewRequired": true
+    }
+  }
+}

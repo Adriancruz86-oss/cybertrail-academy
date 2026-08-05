@@ -118,6 +118,11 @@ html[data-reduced-motion='true'] *::after { animation: none !important; transiti
   margin-bottom: 10px;
 }
 
+.sidebar-panel {
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
 .cyberdex-title {
   font-weight: 700;
   margin-bottom: 4px;
@@ -149,8 +154,17 @@ html[data-reduced-motion='true'] *::after { animation: none !important; transiti
   border-color: #4facff;
 }
 
+.competency-recognized,
+.competency-reasoned {
+  border-color: #4facff;
+}
+
 .competency-competent {
   border-color: #6fe2a7;
+}
+
+.competency-mastered {
+  border-color: #ffd166;
 }
 
 .notification-panel {

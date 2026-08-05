@@ -270,5 +270,114 @@ export const missions: MissionData[] = [
       { conceptId: 'private-key-compromise', evidenceType: 'reasoning', contextId: 'private-key-compromise-response', firstAttemptRequired: true, hintDisqualifies: true, independent: true }
     ],
     rewards: { xp: 180, cyberDexEntries: ['revocation', 'ocsp', 'crl', 'private-key-compromise', 'trust'] }
+  },
+  {
+    missionId: 'splus-c1-m07',
+    title: 'Secure the Conversation',
+    description: 'Match each communication-security job to the technology designed to perform it.',
+    objectives: ['Distinguish encryption from hashing and authentication', 'Build a secure communication toolkit.'],
+    prerequisites: ['splus-c1-m06'],
+    concepts: ['symmetric-encryption', 'asymmetric-cryptography', 'aes', 'ecdhe', 'hmac', 'hashing', 'certificate'],
+    briefing: 'BrightPath is upgrading its secure communications. Maya asks you to assign the right cryptographic tool to each job instead of treating every tool as interchangeable.',
+    investigations: [
+      { evidenceId: 'crypto-toolkit', title: 'Review the cryptographic toolkit', body: 'The toolkit contains AES, ECDHE, HMAC, certificates, and cryptographic hash functions. Each has a distinct job.', label: 'Rule', value: 'Choose by security function, not by acronym', discoveryConcepts: ['symmetric-encryption', 'asymmetric-cryptography', 'aes', 'ecdhe', 'hmac', 'hashing'] },
+      { evidenceId: 'identity-layer', title: 'Review the identity layer', body: 'The existing certificate binds the BrightPath identity to its public key and trusted issuer.', label: 'Identity tool', value: 'Digital certificate', discoveryConcepts: ['certificate'] }
+    ],
+    activity: {
+      type: 'configuration', prompt: 'Which tool should protect large amounts of session data efficiently?', options: [
+        { id: 'bulk-aes', label: 'AES symmetric encryption', correct: true, explanation: 'Correct. AES efficiently protects bulk data after a session key is established.' },
+        { id: 'bulk-ecdhe', label: 'ECDHE', correct: false, explanation: 'ECDHE establishes a shared secret; it is not the bulk data cipher.' },
+        { id: 'bulk-hash', label: 'A one-way hash', correct: false, explanation: 'A hash fingerprints data but does not provide reversible confidentiality.' }
+      ]
+    },
+    activities: [
+      { type: 'configuration', prompt: 'Which tool should protect large amounts of session data efficiently?', options: [
+        { id: 'bulk-aes', label: 'AES symmetric encryption', correct: true, explanation: 'Correct. AES efficiently protects bulk data after a session key is established.' },
+        { id: 'bulk-ecdhe', label: 'ECDHE', correct: false, explanation: 'ECDHE establishes a shared secret; it is not the bulk data cipher.' },
+        { id: 'bulk-hash', label: 'A one-way hash', correct: false, explanation: 'A hash fingerprints data but does not provide reversible confidentiality.' }
+      ] },
+      { type: 'configuration', prompt: 'Which tool should establish an ephemeral shared session secret?', options: [
+        { id: 'key-ecdhe', label: 'ECDHE key agreement', correct: true, explanation: 'Correct. ECDHE establishes an ephemeral shared secret and supports forward secrecy.' },
+        { id: 'key-aes', label: 'AES by itself', correct: false, explanation: 'AES uses a shared secret but does not establish that secret between new parties.' },
+        { id: 'key-hmac', label: 'HMAC', correct: false, explanation: 'HMAC authenticates and checks integrity with an existing shared secret.' }
+      ] },
+      { type: 'configuration', prompt: 'Which tool checks integrity and authenticity when both parties share a secret?', options: [
+        { id: 'integrity-hmac', label: 'HMAC', correct: true, explanation: 'Correct. HMAC combines a secret key with hashing to authenticate a message and detect changes.' },
+        { id: 'integrity-aes', label: 'AES alone', correct: false, explanation: 'Encryption alone does not provide the specific shared-secret message-authentication function requested.' },
+        { id: 'integrity-cert', label: 'A certificate alone', correct: false, explanation: 'A certificate supports identity and trust but does not authenticate each message by itself.' }
+      ] },
+      { type: 'classification', prompt: 'Which tool creates a one-way digest for comparing data?', options: [
+        { id: 'digest-hash', label: 'Cryptographic hashing', correct: true, explanation: 'Correct. Hashing produces a fixed-size, one-way digest.' },
+        { id: 'digest-ecdhe', label: 'ECDHE', correct: false, explanation: 'ECDHE establishes keys; it does not create a general-purpose data digest.' },
+        { id: 'digest-aes', label: 'AES encryption', correct: false, explanation: 'AES ciphertext is reversible with the key and is not a one-way digest.' }
+      ] }
+    ],
+    hint: 'Name the security job first: bulk confidentiality, key agreement, shared-secret authenticity, or one-way digest.',
+    debrief: 'Secure systems combine specialized tools: ECDHE establishes a secret, AES protects bulk data, HMAC authenticates messages with a shared secret, hashing creates digests, and certificates support identity.',
+    masteryEvidence: [
+      { conceptId: 'aes', evidenceType: 'application', contextId: 'crypto-bulk-protection', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 0 },
+      { conceptId: 'symmetric-encryption', evidenceType: 'application', contextId: 'crypto-bulk-protection', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 0 },
+      { conceptId: 'ecdhe', evidenceType: 'application', contextId: 'crypto-key-agreement', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'asymmetric-cryptography', evidenceType: 'application', contextId: 'crypto-key-agreement', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'hmac', evidenceType: 'application', contextId: 'crypto-message-authentication', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 2 },
+      { conceptId: 'hashing', evidenceType: 'application', contextId: 'crypto-one-way-digest', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 3 }
+    ],
+    rewards: { xp: 220, cyberDexEntries: ['symmetric-encryption', 'asymmetric-cryptography', 'aes', 'ecdhe', 'hmac', 'hashing', 'certificate'] }
+  },
+  {
+    missionId: 'splus-c1-m08',
+    title: 'The Fake Login Page',
+    description: 'Investigate a cloned BrightPath login page before more credentials are stolen.',
+    objectives: ['Identify phishing indicators', 'Report and contain the credential-harvesting attempt.'],
+    prerequisites: ['splus-c1-m07'],
+    concepts: ['phishing', 'credential-harvesting', 'typosquatting', 'awareness-training', 'incident-reporting'],
+    briefing: 'Employees received an urgent message claiming their BrightPath accounts will be disabled. The link opens a familiar-looking login page.',
+    investigations: [
+      { evidenceId: 'phish-sender', title: 'Inspect the sender and urgency', body: 'The display name says BrightPath Support, but the sender uses an unrelated domain and threatens immediate suspension.', label: 'Sender', value: 'support@brightpath-alerts.example', discoveryConcepts: ['phishing', 'awareness-training'] },
+      { evidenceId: 'phish-domain', title: 'Inspect the link destination', body: 'The link text looks legitimate, but the destination swaps letters in the BrightPath domain.', label: 'Destination', value: 'brlghtpath-login.example', discoveryConcepts: ['typosquatting', 'credential-harvesting'] },
+      { evidenceId: 'phish-form', title: 'Inspect the login form', body: 'The cloned page sends submitted credentials to an unapproved external service.', label: 'Purpose', value: 'Credential harvesting', discoveryConcepts: ['credential-harvesting', 'incident-reporting'] }
+    ],
+    activity: { type: 'configuration', prompt: 'What is the best immediate response?', options: [
+      { id: 'report-contain', label: 'Report through the security channel, preserve evidence, block the destination, and warn affected users', correct: true, explanation: 'Correct. This preserves evidence, starts coordinated containment, and helps protect other employees.' },
+      { id: 'delete-only', label: 'Delete your copy and take no further action', correct: false, explanation: 'Deleting one copy does not protect other recipients or preserve evidence for investigation.' },
+      { id: 'test-login', label: 'Enter a test password to see whether the page accepts it', correct: false, explanation: 'Submitting credentials interacts with an untrusted system and is unnecessary once the indicators establish the risk.' },
+      { id: 'reply-sender', label: 'Reply to the sender and ask whether the message is real', correct: false, explanation: 'Replying uses an attacker-controlled channel and may confirm that the address is active.' }
+    ] },
+    hint: 'Use the approved reporting path and contain the malicious destination without interacting with the fake form.',
+    debrief: 'Phishing succeeds through trust, urgency, and convincing imitation. Checking the real sender and destination exposes typosquatting and credential harvesting; reporting enables coordinated containment.',
+    masteryEvidence: [
+      { conceptId: 'phishing', evidenceType: 'reasoning', contextId: 'cloned-login-investigation', firstAttemptRequired: true, hintDisqualifies: true, independent: true },
+      { conceptId: 'credential-harvesting', evidenceType: 'reasoning', contextId: 'cloned-login-investigation', firstAttemptRequired: true, hintDisqualifies: true, independent: true },
+      { conceptId: 'incident-reporting', evidenceType: 'application', contextId: 'cloned-login-investigation', firstAttemptRequired: true, hintDisqualifies: true, independent: true }
+    ],
+    rewards: { xp: 190, cyberDexEntries: ['phishing', 'credential-harvesting', 'typosquatting', 'awareness-training', 'incident-reporting'] }
+  },
+  {
+    missionId: 'splus-c1-m09',
+    title: 'The Reused Password',
+    description: 'Stop stolen credentials from being reused against BrightPath accounts.',
+    objectives: ['Recognize credential-stuffing evidence', 'Choose layered authentication controls.'],
+    prerequisites: ['splus-c1-m08'],
+    concepts: ['credential-stuffing', 'password-reuse', 'mfa', 'authentication-logs', 'account-lockout'],
+    briefing: 'BrightPath authentication logs show bursts of sign-in attempts using valid employee email addresses and passwords leaked from another service.',
+    investigations: [
+      { evidenceId: 'login-burst', title: 'Inspect authentication logs', body: 'Many accounts receive a small number of attempts from rotating sources. Some attempts succeed on the first try.', label: 'Pattern', value: 'Known credentials tested across accounts', discoveryConcepts: ['authentication-logs', 'credential-stuffing'] },
+      { evidenceId: 'reuse-confirmed', title: 'Interview an affected user', body: 'The user confirms that the same password was used on the unrelated breached service.', label: 'Risk', value: 'Password reuse', discoveryConcepts: ['password-reuse'] },
+      { evidenceId: 'control-review', title: 'Review identity controls', body: 'MFA is optional and the lockout policy can be abused to deny access if thresholds are too aggressive.', label: 'Control options', value: 'MFA, resets, monitoring, risk-based throttling', discoveryConcepts: ['mfa', 'account-lockout'] }
+    ],
+    activity: { type: 'configuration', prompt: 'Which response best contains the attack without creating a broad lockout outage?', options: [
+      { id: 'layered-response', label: 'Reset affected passwords, require MFA, revoke sessions, monitor logs, and apply risk-based throttling', correct: true, explanation: 'Correct. This removes stolen-password access, adds another factor, ends active sessions, and slows abuse without indiscriminately locking every account.' },
+      { id: 'permanent-lockout', label: 'Permanently lock every account after one failed login', correct: false, explanation: 'An attacker could deny service to users with a single failed attempt; lockout controls require a usability and availability balance.' },
+      { id: 'longer-password-only', label: 'Ask users to make the reused password longer but keep using it', correct: false, explanation: 'A known stolen password remains compromised regardless of length.' },
+      { id: 'ignore-success', label: 'Ignore successful logins and investigate failures only', correct: false, explanation: 'Successful use of stolen credentials is the most important compromise evidence in this incident.' }
+    ] },
+    hint: 'Remove the exposed secrets, add a factor the attacker does not possess, end existing sessions, and avoid a denial-of-service lockout policy.',
+    debrief: 'Credential stuffing reuses credentials stolen elsewhere. Unique passwords, MFA, session revocation, authentication monitoring, and balanced throttling reduce the attack without turning lockout into an availability problem.',
+    masteryEvidence: [
+      { conceptId: 'credential-stuffing', evidenceType: 'reasoning', contextId: 'reused-password-attack', firstAttemptRequired: true, hintDisqualifies: true, independent: true },
+      { conceptId: 'mfa', evidenceType: 'application', contextId: 'reused-password-attack', firstAttemptRequired: true, hintDisqualifies: true, independent: true },
+      { conceptId: 'account-lockout', evidenceType: 'reasoning', contextId: 'reused-password-attack', firstAttemptRequired: true, hintDisqualifies: true, independent: true }
+    ],
+    rewards: { xp: 210, cyberDexEntries: ['credential-stuffing', 'password-reuse', 'mfa', 'authentication-logs', 'account-lockout'] }
   }
 ]

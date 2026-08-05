@@ -4,6 +4,7 @@ import { SaveService } from '../../services/saveService'
 import { MasteryService } from '../../services/masteryService'
 import { GameUI } from '../../ui/GameUI'
 import { ProgressionService } from '../../services/progressionService'
+import { MissionSessionService } from '../../services/missionSessionService'
 import type { MissionActivityOption, MissionStage } from '../../types'
 
 type MissionSceneData = { missionId?: string }
@@ -30,7 +31,7 @@ export class MissionScene extends Phaser.Scene {
     }
     if (!save.activeMission || save.activeMission.missionId !== this.missionId) {
       SaveService.update((state) => {
-        state.activeMission = { missionId: this.missionId, stage: 'briefing', investigationIndex: 0, hintUsed: false, selectedOptionId: null, collectedEvidence: [], decisions: [], discoveredConcepts: [], masteryEvidenceEarned: [] }
+        state.activeMission = { missionId: this.missionId, stage: 'briefing', investigationIndex: 0, hintUsed: false, selectedOptionId: null, collectedEvidence: [], decisions: [], discoveredConcepts: [], masteryEvidenceEarned: [], activityIndex: 0, activityAttempts: {} }
       })
     }
     this.renderStage()
@@ -74,9 +75,22 @@ export class MissionScene extends Phaser.Scene {
     } else if (session.stage === 'decision') {
       this.renderDecision()
     } else if (session.stage === 'feedback') {
-      const option = mission.activity.options.find((item) => item.id === session.selectedOptionId)!
+      const activities = this.getActivities()
+      const option = activities[session.activityIndex].options.find((item) => item.id === session.selectedOptionId)!
       this.addBody(option.explanation)
-      this.addAction(option.correct ? 'View debrief' : 'Try again', () => this.setStage(option.correct ? 'debrief' : 'decision'))
+      const finalActivity = session.activityIndex === activities.length - 1
+      this.addAction(option.correct ? (finalActivity ? 'View debrief' : 'Next decision') : 'Try again', () => {
+        if (!option.correct) this.setStage('decision')
+        else if (finalActivity) this.setStage('debrief')
+        else {
+          SaveService.update((state) => {
+            if (state.activeMission) {
+              MissionSessionService.advanceActivity(state.activeMission)
+            }
+          })
+          this.renderStage()
+        }
+      })
     } else {
       this.addBody(mission.debrief)
       const evidenceNames = mission.investigations.filter((item) => session.collectedEvidence.includes(item.evidenceId)).map((item) => item.title)
@@ -92,9 +106,10 @@ export class MissionScene extends Phaser.Scene {
   private renderDecision() {
     const mission = ContentService.getMission(this.missionId)!
     const session = SaveService.get().activeMission!
-    this.add.text(40, 112, mission.activity.prompt, { fontFamily: 'Arial', fontSize: this.mobile ? '32px' : '20px', color: '#ffffff', wordWrap: { width: 820 } })
-    mission.activity.options.forEach((option, index) => {
-      const y = 195 + index * 82
+    const activity = this.getActivities()[session.activityIndex]
+    this.add.text(40, 112, activity.prompt, { fontFamily: 'Arial', fontSize: this.mobile ? '32px' : '20px', color: '#ffffff', wordWrap: { width: 820 } })
+    activity.options.forEach((option, index) => {
+      const y = 180 + index * 70
       const bg = this.add.rectangle(0, 0, 700, 62, 0x2f80ed)
       const text = this.add.text(-330, 0, option.label, { fontFamily: 'Arial', fontSize: this.mobile ? '30px' : '18px', color: '#ffffff', wordWrap: { width: 630 } }).setOrigin(0, 0.5)
       const button = this.add.container(390, y, [bg, text]).setSize(700, 62).setInteractive(new Phaser.Geom.Rectangle(-350, -31, 700, 62), Phaser.Geom.Rectangle.Contains, true)
@@ -113,8 +128,11 @@ export class MissionScene extends Phaser.Scene {
     const session = SaveService.get().activeMission!
     this.optionButtons.forEach((button) => button.disableInteractive())
     SaveService.update((state) => {
-      const isFirstAttempt = ProgressionService.recordAttempt(state, mission.missionId, option.correct)
-      mission.masteryEvidence.forEach((evidence) => MasteryService.recordAttempt(state, {
+      ProgressionService.recordAttempt(state, mission.missionId, option.correct)
+      if (!state.activeMission) return
+      const isFirstAttempt = MissionSessionService.recordDecision(state.activeMission, option.id, option.correct)
+      const activityEvidence = mission.masteryEvidence.filter((evidence) => (evidence.activityIndex ?? 0) === session.activityIndex)
+      activityEvidence.forEach((evidence) => MasteryService.recordAttempt(state, {
         conceptId: evidence.conceptId,
         missionId: mission.missionId,
         contextId: evidence.contextId,
@@ -124,15 +142,13 @@ export class MissionScene extends Phaser.Scene {
         hintUsed: evidence.hintDisqualifies && session.hintUsed,
         independent: evidence.independent
       }))
-      mission.masteryEvidence.forEach((evidence) => {
+      activityEvidence.forEach((evidence) => {
         const qualifies = option.correct && evidence.independent && ['application', 'reasoning', 'assessment'].includes(evidence.evidenceType) && (!evidence.firstAttemptRequired || isFirstAttempt) && !(evidence.hintDisqualifies && session.hintUsed)
         if (qualifies && state.activeMission && !state.activeMission.masteryEvidenceEarned.includes(evidence.conceptId)) state.activeMission.masteryEvidenceEarned.push(evidence.conceptId)
       })
-      if (option.correct) ProgressionService.complete(state, mission.missionId, mission.rewards.xp)
+      if (option.correct && session.activityIndex === this.getActivities().length - 1) ProgressionService.complete(state, mission.missionId, mission.rewards.xp)
       if (state.activeMission) {
-        state.activeMission.selectedOptionId = option.id
         state.activeMission.stage = 'feedback'
-        state.activeMission.decisions.push({ optionId: option.id, correct: option.correct })
       }
     })
     this.refreshLearningUI()
@@ -156,6 +172,11 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private stageLabel(stage: MissionStage) { return stage.toUpperCase() }
+
+  private getActivities() {
+    const mission = ContentService.getMission(this.missionId)!
+    return mission.activities ?? [mission.activity]
+  }
 
   private refreshLearningUI() {
     const state = SaveService.get()

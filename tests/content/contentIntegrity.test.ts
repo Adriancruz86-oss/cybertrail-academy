@@ -16,6 +16,10 @@ describe('mission content', () => {
         for (const id of investigation.discoveryConcepts) expect(concepts[id], `${mission.missionId} discovery references missing concept ${id}`).toBeDefined()
       }
       for (const evidence of mission.masteryEvidence) expect(concepts[evidence.conceptId]).toBeDefined()
+      const activityCount = mission.activities?.length ?? 1
+      if (mission.activities) expect(mission.activities[0].prompt).toBe(mission.activity.prompt)
+      for (const evidence of mission.masteryEvidence) expect(evidence.activityIndex ?? 0).toBeLessThan(activityCount)
+      for (const activity of mission.activities ?? [mission.activity]) expect(activity.options.filter((option) => option.correct)).toHaveLength(1)
       for (const prerequisite of mission.prerequisites) expect(missionIds).toContain(prerequisite)
     }
   })

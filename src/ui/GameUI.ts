@@ -90,7 +90,6 @@ export class GameUI {
   updateCyberDex(concepts: Record<string, ConceptRecord>, progress: SaveState['conceptProgress']) {
     const entries = Object.values(concepts)
       .filter((concept) => Boolean(progress[concept.conceptId] && progress[concept.conceptId].status !== 'unknown'))
-      .slice(0, 8)
 
     if (entries.length === 0) {
       this.cyberdexPanel.innerHTML = '<p class="empty-state">No concepts discovered yet.</p>'
@@ -114,7 +113,6 @@ export class GameUI {
   updateCompetencyMatrix(concepts: Record<string, ConceptRecord>, progress: SaveState['conceptProgress']) {
     const tiles = Object.values(concepts)
       .filter((concept) => Boolean(progress[concept.conceptId] && progress[concept.conceptId].status !== 'unknown'))
-      .slice(0, 12)
 
     if (tiles.length === 0) {
       this.competencyPanel.innerHTML = '<p class="empty-state">No competency progress yet.</p>'

@@ -1,7 +1,7 @@
 import type { SaveState, ConceptProgressState } from '../types'
 
 const STORAGE_KEY = 'cybertrail-save-v1'
-const SAVE_VERSION = 4
+const SAVE_VERSION = 5
 
 export function createDefaultProgress(): ConceptProgressState {
   return {
@@ -55,7 +55,14 @@ function migrateSave(value: unknown): SaveState {
       ...createDefaultSave(),
       ...candidate,
       version: SAVE_VERSION,
-      activeMission: active ? { ...active, collectedEvidence: [], decisions: [], discoveredConcepts: [], masteryEvidenceEarned: [] } : null
+      activeMission: active ? { ...active, collectedEvidence: [], decisions: [], discoveredConcepts: [], masteryEvidenceEarned: [], activityIndex: 0, activityAttempts: {} } : null
+    }
+  }
+  if (candidate.version === 4) {
+    const active = candidate.activeMission
+    return {
+      ...createDefaultSave(), ...candidate, version: SAVE_VERSION,
+      activeMission: active ? { ...active, activityIndex: 0, activityAttempts: {} } : null
     }
   }
   if (candidate.version !== SAVE_VERSION) return createDefaultSave()
@@ -66,7 +73,8 @@ function migrateSave(value: unknown): SaveState {
     activeMission: active ? {
       ...active,
       collectedEvidence: active.collectedEvidence ?? [], decisions: active.decisions ?? [],
-      discoveredConcepts: active.discoveredConcepts ?? [], masteryEvidenceEarned: active.masteryEvidenceEarned ?? []
+      discoveredConcepts: active.discoveredConcepts ?? [], masteryEvidenceEarned: active.masteryEvidenceEarned ?? [],
+      activityIndex: active.activityIndex ?? 0, activityAttempts: active.activityAttempts ?? {}
     } : null
   }
 }

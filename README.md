@@ -52,6 +52,18 @@ Before delivery, run both `npm test` and `npm run build`.
 7. Confirm each debrief lists evidence, decisions, mastery evidence, and newly discovered CyberDex entries.
 8. Repeat Missions 4–6 at 390×844 and 844×390 and confirm all evidence and action controls remain readable and usable by touch.
 
+## Sprint 5 security and credential testing
+
+1. Continue from a Sprint 4 save and confirm the version 5 migration preserves the active mission, evidence, decisions, XP, and mastery state.
+2. Complete all four decisions in Mission 7 and verify the mission is not rewarded until the final correct decision.
+3. Make an incorrect choice or use a hint on one Mission 7 decision and confirm only that activity loses first-attempt competency credit.
+4. Confirm the Mission 7 debrief distinguishes AES, ECDHE, HMAC, hashing, and certificate identity.
+5. In Mission 8, inspect the sender, urgency, destination domain, and cloned form before reporting the phishing incident.
+6. In Mission 9, confirm the response addresses stolen passwords, MFA, active sessions, monitoring, and lockout availability tradeoffs.
+7. Refresh between Mission 7 decisions and confirm the current activity and per-activity attempt state resume correctly.
+8. Confirm Sprint 5 CyberDex discoveries and competency tiles remain visible instead of being hidden behind earlier concept limits.
+9. Repeat Missions 7–9 with touch controls in phone portrait and landscape, then confirm WASD and E remain functional on desktop.
+
 ## What is implemented
 
 - Phaser 3 player movement and hub interaction

@@ -28,6 +28,7 @@ export interface MasteryEvidenceConfig {
   firstAttemptRequired: boolean
   hintDisqualifies: boolean
   independent: boolean
+  activityIndex?: number
 }
 
 export interface MissionActivityOption {
@@ -62,6 +63,7 @@ export interface MissionData {
   briefing: string
   investigations: MissionInvestigation[]
   activity: MissionActivity
+  activities?: MissionActivity[]
   hint: string
   debrief: string
   masteryEvidence: MasteryEvidenceConfig[]
@@ -101,6 +103,8 @@ export interface ActiveMissionState {
   decisions: Array<{ optionId: string; correct: boolean }>
   discoveredConcepts: string[]
   masteryEvidenceEarned: string[]
+  activityIndex: number
+  activityAttempts: Record<string, number>
 }
 
 export interface SaveState {

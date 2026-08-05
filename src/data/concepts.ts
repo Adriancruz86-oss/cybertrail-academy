@@ -214,5 +214,85 @@ export const concepts: Record<string, ConceptRecord> = {
     conceptId: 'private-key-compromise', name: 'Private-key compromise', fullName: 'Certificate private-key compromise', domain: 'public-web',
     plainDefinition: 'Someone unauthorized may possess the secret signing or identity key.', technicalDefinition: 'Loss of exclusive control over a private key, invalidating confidence in authentication performed with it.',
     whyItExists: 'To identify incidents requiring revocation and key replacement.', relatedConcepts: ['revocation', 'certificate'], commonMisconceptions: ['Issuing a new certificate makes the exposed old key safe.']
+  },
+  'symmetric-encryption': {
+    conceptId: 'symmetric-encryption', name: 'Symmetric encryption', fullName: 'Shared-key encryption', domain: 'cryptography',
+    plainDefinition: 'Fast encryption where both sides use the same secret key.', technicalDefinition: 'Encryption using one shared secret for encryption and decryption.',
+    whyItExists: 'To protect large amounts of data efficiently.', relatedConcepts: ['aes', 'asymmetric-cryptography', 'hmac'], commonMisconceptions: ['Symmetric encryption uses a public and private key pair.']
+  },
+  'asymmetric-cryptography': {
+    conceptId: 'asymmetric-cryptography', name: 'Asymmetric cryptography', fullName: 'Public-key cryptography', domain: 'cryptography',
+    plainDefinition: 'Cryptography using mathematically related public and private keys.', technicalDefinition: 'Algorithms using distinct public and private keys for key establishment, signatures, or limited encryption.',
+    whyItExists: 'To support secure exchanges and identity without a pre-shared secret.', relatedConcepts: ['ecdhe', 'certificate', 'symmetric-encryption'], commonMisconceptions: ['Asymmetric encryption is best for all bulk data.']
+  },
+  aes: {
+    conceptId: 'aes', name: 'AES', fullName: 'Advanced Encryption Standard', domain: 'cryptography',
+    plainDefinition: 'Fast symmetric encryption for protecting bulk data.', technicalDefinition: 'A symmetric block cipher widely used for confidentiality at rest and in transit.',
+    whyItExists: 'To provide efficient, strong data confidentiality.', relatedConcepts: ['symmetric-encryption', 'ecdhe'], commonMisconceptions: ['AES is an asymmetric key-exchange algorithm.']
+  },
+  ecdhe: {
+    conceptId: 'ecdhe', name: 'ECDHE', fullName: 'Elliptic Curve Diffie-Hellman Ephemeral', domain: 'cryptography',
+    plainDefinition: 'A method for establishing a temporary shared secret.', technicalDefinition: 'An ephemeral elliptic-curve Diffie-Hellman key-agreement mechanism providing forward secrecy.',
+    whyItExists: 'To establish session keys without transmitting the secret itself.', relatedConcepts: ['asymmetric-cryptography', 'aes', 'certificate'], commonMisconceptions: ['ECDHE encrypts the entire conversation.']
+  },
+  hmac: {
+    conceptId: 'hmac', name: 'HMAC', fullName: 'Hash-based Message Authentication Code', domain: 'cryptography',
+    plainDefinition: 'A shared-secret check for message integrity and authenticity.', technicalDefinition: 'A keyed construction combining a cryptographic hash with a secret key.',
+    whyItExists: 'To detect changes and authenticate a message when parties share a secret.', relatedConcepts: ['hashing', 'symmetric-encryption'], commonMisconceptions: ['HMAC encrypts message contents.']
+  },
+  hashing: {
+    conceptId: 'hashing', name: 'Hashing', fullName: 'Cryptographic hashing', domain: 'cryptography',
+    plainDefinition: 'A one-way function that produces a fixed-size digest.', technicalDefinition: 'A deterministic one-way transformation used for integrity comparisons and related constructions.',
+    whyItExists: 'To fingerprint data without encrypting it.', relatedConcepts: ['hmac', 'aes'], commonMisconceptions: ['Hashing can be decrypted with the right key.']
+  },
+  phishing: {
+    conceptId: 'phishing', name: 'Phishing', fullName: 'Social-engineering phishing attack', domain: 'threats-vulnerabilities-mitigations',
+    plainDefinition: 'A deceptive message designed to make someone reveal information or take an unsafe action.', technicalDefinition: 'Social engineering delivered through electronic communication to steal credentials, deliver malware, or induce action.',
+    whyItExists: 'To exploit human trust instead of only technical weaknesses.', relatedConcepts: ['credential-harvesting', 'typosquatting', 'awareness-training'], commonMisconceptions: ['Phishing messages always contain obvious spelling errors.']
+  },
+  'credential-harvesting': {
+    conceptId: 'credential-harvesting', name: 'Credential harvesting', fullName: 'Credential-harvesting attack', domain: 'threats-vulnerabilities-mitigations',
+    plainDefinition: 'Collecting usernames and passwords through deception or malicious systems.', technicalDefinition: 'Capturing authentication secrets through fake forms, malware, interception, or social engineering.',
+    whyItExists: 'To obtain valid credentials for later account access.', relatedConcepts: ['phishing', 'credential-stuffing', 'mfa'], commonMisconceptions: ['A fake login must reject every submitted password.']
+  },
+  typosquatting: {
+    conceptId: 'typosquatting', name: 'Typosquatting', fullName: 'Look-alike domain registration', domain: 'threats-vulnerabilities-mitigations',
+    plainDefinition: 'Using a misspelled or look-alike domain to impersonate a trusted site.', technicalDefinition: 'Registering confusingly similar domain names to exploit user typing or visual mistakes.',
+    whyItExists: 'To make malicious destinations appear legitimate.', relatedConcepts: ['phishing', 'domain-validation'], commonMisconceptions: ['A padlock means the domain must be the intended organization.']
+  },
+  'awareness-training': {
+    conceptId: 'awareness-training', name: 'Awareness training', fullName: 'Security awareness training', domain: 'security-operations',
+    plainDefinition: 'Teaching people to recognize and respond to security risks.', technicalDefinition: 'A program that develops user recognition, prevention, and reporting behaviors for security threats.',
+    whyItExists: 'To reduce human-targeted attack success and improve reporting.', relatedConcepts: ['phishing', 'incident-reporting'], commonMisconceptions: ['Training replaces technical controls.']
+  },
+  'incident-reporting': {
+    conceptId: 'incident-reporting', name: 'Incident reporting', fullName: 'Security incident reporting procedure', domain: 'security-operations',
+    plainDefinition: 'Sending suspicious activity through the approved security channel.', technicalDefinition: 'Documenting and escalating suspected incidents according to organizational procedure.',
+    whyItExists: 'To preserve evidence and enable a coordinated response.', relatedConcepts: ['phishing', 'awareness-training'], commonMisconceptions: ['Deleting a suspicious message is always enough.']
+  },
+  'credential-stuffing': {
+    conceptId: 'credential-stuffing', name: 'Credential stuffing', fullName: 'Automated reused-credential attack', domain: 'threats-vulnerabilities-mitigations',
+    plainDefinition: 'Testing stolen username and password pairs on other services.', technicalDefinition: 'Automated authentication attempts using credentials obtained from an unrelated breach.',
+    whyItExists: 'To exploit password reuse across services.', relatedConcepts: ['password-reuse', 'mfa', 'authentication-logs'], commonMisconceptions: ['Credential stuffing requires guessing new passwords.']
+  },
+  'password-reuse': {
+    conceptId: 'password-reuse', name: 'Password reuse', fullName: 'Cross-service password reuse', domain: 'identity-access',
+    plainDefinition: 'Using the same password for more than one account.', technicalDefinition: 'Reusing an authentication secret across separate systems, creating correlated compromise risk.',
+    whyItExists: 'It is a user behavior attackers exploit after external breaches.', relatedConcepts: ['credential-stuffing', 'mfa'], commonMisconceptions: ['A strong reused password is safe everywhere.']
+  },
+  mfa: {
+    conceptId: 'mfa', name: 'MFA', fullName: 'Multi-factor authentication', domain: 'identity-access',
+    plainDefinition: 'Requiring more than one type of proof to sign in.', technicalDefinition: 'Authentication using factors from at least two distinct categories such as knowledge, possession, or inherence.',
+    whyItExists: 'To reduce the value of a stolen password alone.', relatedConcepts: ['credential-stuffing', 'password-reuse'], commonMisconceptions: ['Two passwords are two authentication factors.']
+  },
+  'authentication-logs': {
+    conceptId: 'authentication-logs', name: 'Authentication logs', fullName: 'Authentication event logs', domain: 'security-operations',
+    plainDefinition: 'Records of sign-in attempts and outcomes.', technicalDefinition: 'Timestamped identity events containing account, source, result, and contextual authentication data.',
+    whyItExists: 'To detect attacks and investigate account activity.', relatedConcepts: ['credential-stuffing', 'account-lockout'], commonMisconceptions: ['Successful logins are never suspicious.']
+  },
+  'account-lockout': {
+    conceptId: 'account-lockout', name: 'Account lockout', fullName: 'Authentication lockout control', domain: 'identity-access',
+    plainDefinition: 'Temporarily blocking sign-in after suspicious failures.', technicalDefinition: 'A threshold control that restricts authentication after repeated failed attempts.',
+    whyItExists: 'To slow automated attacks while balancing denial-of-service and user-access risks.', relatedConcepts: ['authentication-logs', 'credential-stuffing', 'mfa'], commonMisconceptions: ['Permanent lockout is always the safest setting.']
   }
 }

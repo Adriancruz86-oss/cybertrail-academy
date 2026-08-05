@@ -237,6 +237,10 @@ html[data-reduced-motion='true'] *, html[data-reduced-motion='true'] *::before, 
   background: linear-gradient(135deg, rgba(28, 104, 151, .35), rgba(22, 49, 72, .6));
 }
 .chapter-heading { border: 1px solid rgba(121,204,255,.28); border-radius: 20px; background: linear-gradient(135deg, rgba(28,104,151,.35), rgba(22,49,72,.6)); padding: clamp(20px,4vw,32px); }
+.chapter-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; padding: 2px 2px 8px; }
+.chapter-tabs button { flex: 0 0 auto; min-height: 42px; border: 1px solid rgba(116,205,255,.35); border-radius: 999px; background: #102c42; color: #dceef8; cursor: pointer; padding: 8px 14px; }
+.chapter-tabs button[aria-pressed='true'] { border-color: #8ed8ff; background: #1d638f; color: white; }
+.chapter-tabs button:focus-visible { outline: 3px solid rgba(130,211,255,.65); }
 .chapter-heading h2 { margin: 7px 0; font-size: clamp(1.5rem,4vw,2.35rem); }
 .chapter-heading p { max-width: 720px; margin-bottom: 0; color: #c8dbe8; line-height: 1.5; }
 .mission-list { display: grid; gap: 13px; margin-top: 18px; }
@@ -315,6 +319,7 @@ html[data-reduced-motion='true'] *, html[data-reduced-motion='true'] *::before, 
   pointer-events: none;
 }
 .notification-panel.visible { opacity: 1; transform: translate(-50%, 0); }
+.screen-overlay.visible ~ .notification-panel, .results-overlay.visible ~ .notification-panel { opacity: 0; visibility: hidden; }
 .empty-state { padding: 40px; color: #bed2df; text-align: center; }
 
 @media (max-width: 760px) {

@@ -1,6 +1,6 @@
 import type { MissionData, ConceptRecord, SaveState, MissionActivity, MissionActivityOption } from '../types'
 import { SaveService } from '../services/saveService'
-import { getAchievements, getCampaignCompletion, getCurrentChapter, getMissionNavigatorStatus, missionChapters } from '../game/missionChapters'
+import { getAchievements, getCampaignCompletion, getCurrentChapter, getMissionNavigatorStatus, getVisibleChapters, missionChapters } from '../game/missionChapters'
 
 type ScreenName = 'mission' | 'cyberdex' | 'progress' | 'settings'
 
@@ -135,7 +135,13 @@ export class GameUI {
     args.activity.options.forEach((option, index) => {
       const button = document.createElement('button')
       button.className = 'decision-option'
-      button.innerHTML = `<span>${String.fromCharCode(65 + index)}</span><strong>${option.label}</strong>`
+      const letter = String.fromCharCode(65 + index)
+      button.setAttribute('aria-label', `Option ${letter}: ${option.label}`)
+      const badge = document.createElement('span')
+      badge.textContent = letter
+      const label = document.createElement('strong')
+      label.textContent = option.label
+      button.append(badge, label)
       button.addEventListener('click', () => {
         options.querySelectorAll('button').forEach((item) => { (item as HTMLButtonElement).disabled = true })
         args.onSelect(option)
@@ -215,24 +221,33 @@ export class GameUI {
   }
 
   updateMissionNavigator(missions: MissionData[], state: SaveState, onLaunch: (missionId: string) => void) {
-    const chapter = getCurrentChapter(state)
-    const chapterMissions = chapter.missionIds.map((id) => missions.find((mission) => mission.missionId === id)).filter(Boolean) as MissionData[]
-    this.missionPanel.innerHTML = `
-      <div class="chapter-heading"><span>Current chapter · ${chapter.domain}</span><h2>${chapter.title}</h2><p>Completed missions remain replayable. Locked missions open as you progress through this chapter.</p></div>
+    const currentChapter = getCurrentChapter(state)
+    const visibleChapters = getVisibleChapters(state)
+    const renderChapter = (chapterId: string) => {
+      const chapter = visibleChapters.find((item) => item.id === chapterId) ?? currentChapter
+      const chapterMissions = chapter.missionIds.map((id) => missions.find((mission) => mission.missionId === id)).filter(Boolean) as MissionData[]
+      this.missionPanel.innerHTML = `
+      ${visibleChapters.length > 1 ? `<nav class="chapter-tabs" aria-label="Available chapters">${visibleChapters.map((item) => `<button data-chapter-id="${item.id}" aria-pressed="${item.id === chapter.id}">${item.title}</button>`).join('')}</nav>` : ''}
+      <div class="chapter-heading"><span>${chapter.id === currentChapter.id ? 'Current chapter' : 'Completed chapter'} · ${chapter.domain}</span><h2>${chapter.title}</h2><p>Completed missions remain replayable. Locked missions open as you progress through this chapter.</p></div>
       <div class="mission-list">${chapterMissions.map((mission, index) => {
         const status = getMissionNavigatorStatus(state, mission.missionId, mission.prerequisites)
         const action = status === 'locked' ? 'Locked' : status === 'current' ? 'Resume' : status === 'completed' ? 'Replay' : 'Start'
         return `<article class="mission-card mission-${status}"><div class="mission-number">${index + 1}</div><div><span>${status}</span><h3>${mission.title}</h3><p>${mission.description}</p></div><button data-mission-id="${mission.missionId}" ${status === 'locked' ? 'disabled' : ''}>${action}</button></article>`
       }).join('')}</div>
     `
-    this.missionPanel.querySelectorAll<HTMLButtonElement>('[data-mission-id]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const missionId = button.dataset.missionId!
-        if (state.activeMission && state.activeMission.missionId !== missionId && !window.confirm('Switch missions? Your current in-mission stage will be replaced.')) return
-        this.closeScreen()
-        onLaunch(missionId)
+      this.missionPanel.querySelectorAll<HTMLButtonElement>('[data-chapter-id]').forEach((button) => {
+        button.addEventListener('click', () => renderChapter(button.dataset.chapterId!))
       })
-    })
+      this.missionPanel.querySelectorAll<HTMLButtonElement>('[data-mission-id]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const missionId = button.dataset.missionId!
+          if (state.activeMission && state.activeMission.missionId !== missionId && !window.confirm('Switch missions? Your current in-mission stage will be replaced.')) return
+          this.closeScreen()
+          onLaunch(missionId)
+        })
+      })
+    }
+    renderChapter(currentChapter.id)
   }
 
   updateCyberDex(concepts: Record<string, ConceptRecord>, progress: SaveState['conceptProgress']) {

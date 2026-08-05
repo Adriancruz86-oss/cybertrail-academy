@@ -141,6 +141,17 @@ Before delivery, run both `npm test` and `npm run build`.
 7. Replay Missions 13–15 and confirm rewards are not granted twice.
 8. Repeat the final chapter at 390×844 and 844×390, then run `npm test` and `npm run build`.
 
+## Sprint 10 release-hardening testing
+
+1. Sample questions across Missions 1–15 and confirm correct answers appear across A, B, C, and D rather than following one position.
+2. Refresh during an active decision and confirm the answer order remains unchanged and the saved attempt resumes.
+3. Confirm answer labels expose their letter and full response to assistive technology and remain keyboard focusable.
+4. Complete a chapter, open Mission, and browse earlier completed chapters; confirm no future chapter appears before it unlocks.
+5. Open Mission or Results while a notification is active and confirm the notification does not cover modal content.
+6. Verify room and analyst artwork remains sharp after asset optimization on desktop and phone.
+7. Deploy a new production build and confirm the v4 service worker replaces older cached assets without requiring site-data removal.
+8. Run `npm test` and `npm run build` before publishing.
+
 ## Architecture
 
 - `src/game/scenes`: Phaser scene flow

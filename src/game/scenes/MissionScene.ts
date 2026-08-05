@@ -6,6 +6,7 @@ import { GameUI } from '../../ui/GameUI'
 import { ProgressionService } from '../../services/progressionService'
 import { MissionSessionService } from '../../services/missionSessionService'
 import { getMissionPresentation } from '../missionPresentation'
+import { orderAssessmentOptions } from '../assessmentOrdering'
 import type { MissionActivityOption, MissionStage } from '../../types'
 
 type MissionSceneData = { missionId?: string }
@@ -122,7 +123,7 @@ export class MissionScene extends Phaser.Scene {
   private renderDecision() {
     const mission = ContentService.getMission(this.missionId)!
     const session = SaveService.get().activeMission!
-    const activity = this.getActivities()[session.activityIndex]
+    const activity = orderAssessmentOptions(this.getActivities()[session.activityIndex], this.missionId, session.activityIndex)
     this.add.text(480, 180, 'Review the situation and choose the strongest response.', {
       fontFamily: 'Arial', fontSize: this.mobile ? '28px' : '18px', color: '#dbeafe', align: 'center', wordWrap: { width: 360 }
     }).setOrigin(0.5)

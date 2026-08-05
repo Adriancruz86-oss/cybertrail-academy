@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createDefaultSave } from '../../src/services/saveService'
-import { getAchievements, getCampaignCompletion, getCurrentChapter, getMissionNavigatorStatus } from '../../src/game/missionChapters'
+import { getAchievements, getCampaignCompletion, getCurrentChapter, getMissionNavigatorStatus, getVisibleChapters } from '../../src/game/missionChapters'
 
 describe('mission chapters', () => {
   it('shows the chapter containing the next unlocked mission', () => {
@@ -9,6 +9,7 @@ describe('mission chapters', () => {
     state.completedMissions.push('splus-c1-m01', 'splus-c1-m02', 'splus-c1-m03')
     state.unlockedMissions.push('splus-c1-m04')
     expect(getCurrentChapter(state).id).toBe('trust')
+    expect(getVisibleChapters(state).map((chapter) => chapter.id)).toEqual(['foundations', 'trust'])
   })
 
   it('distinguishes replayable, available, active, and locked missions', () => {
@@ -27,5 +28,6 @@ describe('mission chapters', () => {
     expect(getCampaignCompletion(state)).toEqual({ completed: 15, total: 15, percent: 100 })
     expect(getAchievements(state).map((achievement) => achievement.id)).toContain('public-web-defender')
     expect(getCurrentChapter(state).id).toBe('incident-response')
+    expect(getVisibleChapters(state)).toHaveLength(6)
   })
 })

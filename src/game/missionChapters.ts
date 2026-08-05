@@ -24,6 +24,11 @@ export function getCurrentChapter(state: SaveState): MissionChapter {
   return missionChapters.find((chapter) => chapter.missionIds.includes(focusMissionId)) ?? missionChapters[0]
 }
 
+export function getVisibleChapters(state: SaveState) {
+  const currentIndex = missionChapters.indexOf(getCurrentChapter(state))
+  return missionChapters.slice(0, currentIndex + 1)
+}
+
 export type MissionNavigatorStatus = 'current' | 'available' | 'completed' | 'locked'
 
 export function getMissionNavigatorStatus(state: SaveState, missionId: string, prerequisites: string[]): MissionNavigatorStatus {

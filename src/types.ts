@@ -44,8 +44,11 @@ export interface MissionActivity {
 }
 
 export interface MissionInvestigation {
+  evidenceId: string
   title: string
   body: string
+  label?: string
+  value?: string
   discoveryConcepts: string[]
 }
 
@@ -94,6 +97,10 @@ export interface ActiveMissionState {
   investigationIndex: number
   hintUsed: boolean
   selectedOptionId: string | null
+  collectedEvidence: string[]
+  decisions: Array<{ optionId: string; correct: boolean }>
+  discoveredConcepts: string[]
+  masteryEvidenceEarned: string[]
 }
 
 export interface SaveState {

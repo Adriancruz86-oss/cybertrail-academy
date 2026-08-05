@@ -41,6 +41,17 @@ npm run test
 
 Before delivery, run both `npm test` and `npm run build`.
 
+## Sprint 4 certificate mission testing
+
+1. Continue from a Sprint 3 save and confirm it migrates without losing XP, settings, completed missions, or active mission progress.
+2. Complete Missions 4–6 in sequence and inspect every certificate evidence field before making a decision.
+3. Confirm Mission 4 awards guided recognition only and does not increase a competency streak.
+4. Complete Missions 5 and 6 correctly on the first attempt without hints; Certificate Trust should become competent across the two distinct contexts.
+5. Retry with a hint or an incorrect first answer and confirm that encounter does not earn competency credit.
+6. Refresh during certificate inspection and after a decision; collected evidence and decisions should be restored.
+7. Confirm each debrief lists evidence, decisions, mastery evidence, and newly discovered CyberDex entries.
+8. Repeat Missions 4–6 at 390×844 and 844×390 and confirm all evidence and action controls remain readable and usable by touch.
+
 ## What is implemented
 
 - Phaser 3 player movement and hub interaction

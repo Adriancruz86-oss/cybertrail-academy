@@ -67,7 +67,7 @@ export class GameUI {
     })
   }
 
-  updateMissionLog(mission?: MissionData) {
+  updateMissionLog(mission?: MissionData, collectedEvidence: string[] = []) {
     if (!mission) {
       this.missionPanel.innerHTML = `
         <div class="panel-header">Mission log</div>
@@ -83,6 +83,7 @@ export class GameUI {
       <div class="mission-objectives">
         ${mission.objectives.map((objective) => `<div class="objective">• ${objective}</div>`).join('')}
       </div>
+      ${collectedEvidence.length ? `<div class="evidence-list"><strong>Evidence:</strong> ${collectedEvidence.map((id) => mission.investigations.find((item) => item.evidenceId === id)?.title ?? id).join(', ')}</div>` : ''}
     `
   }
 

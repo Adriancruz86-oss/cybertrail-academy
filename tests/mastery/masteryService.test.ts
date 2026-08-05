@@ -4,7 +4,7 @@ import type { SaveState } from '../../src/types'
 
 function createTestState(): SaveState {
   return {
-    version: 3,
+    version: 4,
     playerId: 'test',
     displayName: 'Analyst',
     rank: 'analyst-trainee',

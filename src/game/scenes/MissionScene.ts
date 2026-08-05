@@ -30,7 +30,7 @@ export class MissionScene extends Phaser.Scene {
     }
     if (!save.activeMission || save.activeMission.missionId !== this.missionId) {
       SaveService.update((state) => {
-        state.activeMission = { missionId: this.missionId, stage: 'briefing', investigationIndex: 0, hintUsed: false, selectedOptionId: null }
+        state.activeMission = { missionId: this.missionId, stage: 'briefing', investigationIndex: 0, hintUsed: false, selectedOptionId: null, collectedEvidence: [], decisions: [], discoveredConcepts: [], masteryEvidenceEarned: [] }
       })
     }
     this.renderStage()
@@ -53,8 +53,16 @@ export class MissionScene extends Phaser.Scene {
       const item = mission.investigations[session.investigationIndex]
       this.add.text(40, 120, item.title, { fontFamily: 'Arial', fontSize: this.mobile ? '34px' : '22px', color: '#ffffff', fontStyle: 'bold' })
       this.addBody(item.body, 165)
-      SaveService.update((state) => item.discoveryConcepts.forEach((id) => MasteryService.recordExposure(state, id)))
+      SaveService.update((state) => {
+        item.discoveryConcepts.forEach((id) => {
+          const undiscovered = !state.conceptProgress[id] || state.conceptProgress[id].status === 'unknown'
+          MasteryService.recordExposure(state, id)
+          if (undiscovered && state.activeMission && !state.activeMission.discoveredConcepts.includes(id)) state.activeMission.discoveredConcepts.push(id)
+        })
+        if (state.activeMission && !state.activeMission.collectedEvidence.includes(item.evidenceId)) state.activeMission.collectedEvidence.push(item.evidenceId)
+      })
       this.refreshLearningUI()
+      if (item.label && item.value) this.add.text(40, 300, `${item.label}: ${item.value}`, { fontFamily: 'Arial', fontSize: this.mobile ? '31px' : '19px', color: '#9ef0b4', wordWrap: { width: 820 } })
       const last = session.investigationIndex === mission.investigations.length - 1
       this.addAction(last ? 'Make a decision' : 'Inspect next clue', () => {
         if (last) this.setStage('decision')
@@ -71,6 +79,8 @@ export class MissionScene extends Phaser.Scene {
       this.addAction(option.correct ? 'View debrief' : 'Try again', () => this.setStage(option.correct ? 'debrief' : 'decision'))
     } else {
       this.addBody(mission.debrief)
+      const evidenceNames = mission.investigations.filter((item) => session.collectedEvidence.includes(item.evidenceId)).map((item) => item.title)
+      this.add.text(40, 300, `Evidence collected: ${evidenceNames.join(', ')}\nDecisions: ${session.decisions.length} · Correct: ${session.decisions.filter((item) => item.correct).length}\nMastery evidence earned: ${session.masteryEvidenceEarned.join(', ') || 'None'}\nNew CyberDex entries: ${session.discoveredConcepts.join(', ') || 'None'}`, { fontFamily: 'Arial', fontSize: this.mobile ? '25px' : '16px', color: '#9fd4ff', lineSpacing: 4, wordWrap: { width: 820 } })
       this.addAction('Complete mission', () => {
         SaveService.update((state) => { state.activeMission = null })
         this.refreshLearningUI()
@@ -114,10 +124,15 @@ export class MissionScene extends Phaser.Scene {
         hintUsed: evidence.hintDisqualifies && session.hintUsed,
         independent: evidence.independent
       }))
+      mission.masteryEvidence.forEach((evidence) => {
+        const qualifies = option.correct && evidence.independent && ['application', 'reasoning', 'assessment'].includes(evidence.evidenceType) && (!evidence.firstAttemptRequired || isFirstAttempt) && !(evidence.hintDisqualifies && session.hintUsed)
+        if (qualifies && state.activeMission && !state.activeMission.masteryEvidenceEarned.includes(evidence.conceptId)) state.activeMission.masteryEvidenceEarned.push(evidence.conceptId)
+      })
       if (option.correct) ProgressionService.complete(state, mission.missionId, mission.rewards.xp)
       if (state.activeMission) {
         state.activeMission.selectedOptionId = option.id
         state.activeMission.stage = 'feedback'
+        state.activeMission.decisions.push({ optionId: option.id, correct: option.correct })
       }
     })
     this.refreshLearningUI()
@@ -145,6 +160,7 @@ export class MissionScene extends Phaser.Scene {
   private refreshLearningUI() {
     const state = SaveService.get()
     GameUI.get().updateStatus(state)
+    GameUI.get().updateMissionLog(ContentService.getMission(this.missionId), state.activeMission?.collectedEvidence ?? [])
     GameUI.get().updateCyberDex(ContentService.getAllConcepts(), state.conceptProgress)
     GameUI.get().updateCompetencyMatrix(ContentService.getAllConcepts(), state.conceptProgress)
   }

@@ -1,8 +1,9 @@
 import type { SaveState, ConceptProgressState } from '../types'
 
 const STORAGE_KEY = 'cybertrail-save-v1'
+const SAVE_VERSION = 5
 
-function createDefaultProgress(): ConceptProgressState {
+export function createDefaultProgress(): ConceptProgressState {
   return {
     status: 'unknown',
     exposures: 0,
@@ -16,21 +17,65 @@ function createDefaultProgress(): ConceptProgressState {
   }
 }
 
-function createDefaultSave(): SaveState {
+export function createDefaultSave(): SaveState {
   return {
-    version: 1,
+    version: SAVE_VERSION,
     playerId: 'local-player',
     displayName: 'Analyst',
     rank: 'analyst-trainee',
     xp: 0,
     completedMissions: [],
     unlockedMissions: ['splus-c1-m01'],
+    missionAttempts: {},
+    activeMission: null,
     conceptProgress: {},
     settings: {
       sound: true,
       reducedMotion: false,
       textSize: 'standard'
     }
+  }
+}
+
+function migrateSave(value: unknown): SaveState {
+  if (!value || typeof value !== 'object') return createDefaultSave()
+  const candidate = value as Partial<SaveState>
+  if (candidate.version === 1 || candidate.version === 2) {
+    return {
+      ...createDefaultSave(),
+      ...candidate,
+      version: SAVE_VERSION,
+      missionAttempts: candidate.missionAttempts ?? {},
+      activeMission: null
+    }
+  }
+  if (candidate.version === 3) {
+    const active = candidate.activeMission
+    return {
+      ...createDefaultSave(),
+      ...candidate,
+      version: SAVE_VERSION,
+      activeMission: active ? { ...active, collectedEvidence: [], decisions: [], discoveredConcepts: [], masteryEvidenceEarned: [], activityIndex: 0, activityAttempts: {} } : null
+    }
+  }
+  if (candidate.version === 4) {
+    const active = candidate.activeMission
+    return {
+      ...createDefaultSave(), ...candidate, version: SAVE_VERSION,
+      activeMission: active ? { ...active, activityIndex: 0, activityAttempts: {} } : null
+    }
+  }
+  if (candidate.version !== SAVE_VERSION) return createDefaultSave()
+  const active = candidate.activeMission
+  return {
+    ...createDefaultSave(), ...candidate,
+    missionAttempts: candidate.missionAttempts ?? {},
+    activeMission: active ? {
+      ...active,
+      collectedEvidence: active.collectedEvidence ?? [], decisions: active.decisions ?? [],
+      discoveredConcepts: active.discoveredConcepts ?? [], masteryEvidenceEarned: active.masteryEvidenceEarned ?? [],
+      activityIndex: active.activityIndex ?? 0, activityAttempts: active.activityAttempts ?? {}
+    } : null
   }
 }
 
@@ -45,10 +90,7 @@ export const SaveService = {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY)
       if (raw) {
-        currentState = JSON.parse(raw) as SaveState
-        if (currentState.version !== 1) {
-          currentState = createDefaultSave()
-        }
+        currentState = migrateSave(JSON.parse(raw))
       } else {
         currentState = createDefaultSave()
       }
@@ -76,6 +118,16 @@ export const SaveService = {
     return this.save(currentState)
   },
 
+  reload(): SaveState {
+    currentState = null
+    return this.load()
+  },
+
+  hasProgress(): boolean {
+    const state = this.get()
+    return state.xp > 0 || state.completedMissions.length > 0 || Object.keys(state.missionAttempts).length > 0
+  },
+
   get(): SaveState {
     return this.load()
   },
@@ -84,36 +136,5 @@ export const SaveService = {
     const state = this.get()
     mutator(state)
     return this.save(state)
-  },
-
-  completeMission(missionId: string): SaveState {
-    return this.update((state) => {
-      if (!state.completedMissions.includes(missionId)) {
-        state.completedMissions.push(missionId)
-      }
-    })
-  },
-
-  unlockMission(missionId: string): SaveState {
-    return this.update((state) => {
-      if (!state.unlockedMissions.includes(missionId)) {
-        state.unlockedMissions.push(missionId)
-      }
-    })
-  },
-
-  addXp(amount: number): SaveState {
-    return this.update((state) => {
-      state.xp += amount
-    })
-  },
-
-  ensureConceptProgress(conceptId: string): ConceptProgressState {
-    const state = this.get()
-    if (!state.conceptProgress[conceptId]) {
-      state.conceptProgress[conceptId] = createDefaultProgress()
-      this.save(state)
-    }
-    return state.conceptProgress[conceptId]
   }
 }

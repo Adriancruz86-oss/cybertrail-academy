@@ -7,11 +7,6 @@ export const ContentService = {
     return missions.find((mission) => mission.missionId === missionId)
   },
 
-  getNextMission(currentMissionId: string): MissionData | undefined {
-    const index = missions.findIndex((mission) => mission.missionId === currentMissionId)
-    return index >= 0 && index + 1 < missions.length ? missions[index + 1] : undefined
-  },
-
   getAllMissions(): MissionData[] {
     return [...missions]
   },

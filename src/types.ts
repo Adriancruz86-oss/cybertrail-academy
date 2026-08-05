@@ -3,6 +3,7 @@ export type ConceptStatus =
   | 'exposed'
   | 'recognized'
   | 'applied'
+  | 'reasoned'
   | 'competent'
   | 'mastered'
 
@@ -23,9 +24,11 @@ export interface ConceptRecord {
 export interface MasteryEvidenceConfig {
   conceptId: string
   evidenceType: EvidenceType
+  contextId: string
   firstAttemptRequired: boolean
   hintDisqualifies: boolean
   independent: boolean
+  activityIndex?: number
 }
 
 export interface MissionActivityOption {
@@ -41,6 +44,15 @@ export interface MissionActivity {
   options: MissionActivityOption[]
 }
 
+export interface MissionInvestigation {
+  evidenceId: string
+  title: string
+  body: string
+  label?: string
+  value?: string
+  discoveryConcepts: string[]
+}
+
 export interface MissionData {
   missionId: string
   title: string
@@ -48,7 +60,12 @@ export interface MissionData {
   objectives: string[]
   prerequisites: string[]
   concepts: string[]
+  briefing: string
+  investigations: MissionInvestigation[]
   activity: MissionActivity
+  activities?: MissionActivity[]
+  hint: string
+  debrief: string
   masteryEvidence: MasteryEvidenceConfig[]
   rewards: {
     xp: number
@@ -68,6 +85,28 @@ export interface ConceptProgressState {
   nextReview: number | null
 }
 
+export interface MissionAttemptState {
+  attempts: number
+  firstAttemptCorrect: boolean | null
+  rewardGranted: boolean
+}
+
+export type MissionStage = 'briefing' | 'investigation' | 'decision' | 'feedback' | 'debrief'
+
+export interface ActiveMissionState {
+  missionId: string
+  stage: MissionStage
+  investigationIndex: number
+  hintUsed: boolean
+  selectedOptionId: string | null
+  collectedEvidence: string[]
+  decisions: Array<{ optionId: string; correct: boolean }>
+  discoveredConcepts: string[]
+  masteryEvidenceEarned: string[]
+  activityIndex: number
+  activityAttempts: Record<string, number>
+}
+
 export interface SaveState {
   version: number
   playerId: string
@@ -76,6 +115,8 @@ export interface SaveState {
   xp: number
   completedMissions: string[]
   unlockedMissions: string[]
+  missionAttempts: Record<string, MissionAttemptState>
+  activeMission: ActiveMissionState | null
   conceptProgress: Record<string, ConceptProgressState>
   settings: {
     sound: boolean

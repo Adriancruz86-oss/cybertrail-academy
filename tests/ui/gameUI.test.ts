@@ -55,6 +55,11 @@ describe('GameUI navigation', () => {
     let exited = false
     ui.showMissionExit(() => { exited = true })
     const exit = document.querySelector('.mission-exit-button') as HTMLButtonElement
+    expect(exit.textContent).toBe('×')
+    ui.openScreen('settings')
+    expect(exit.classList.contains('screen-covered')).toBe(true)
+    ui.closeScreen()
+    expect(exit.classList.contains('screen-covered')).toBe(false)
     exit.click()
     expect(exited).toBe(true)
     ui.hideMissionExit()

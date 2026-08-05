@@ -98,16 +98,20 @@ html[data-reduced-motion='true'] *, html[data-reduced-motion='true'] *::before, 
   right: 18px;
   z-index: 52;
   display: none;
-  min-height: 46px;
+  width: 46px;
+  height: 46px;
   border: 1px solid rgba(255, 211, 105, .72);
   border-radius: 12px;
   background: rgba(79, 39, 22, .94);
   color: #fff7db;
   cursor: pointer;
-  padding: 9px 16px;
+  padding: 0;
+  font-size: 1.8rem;
+  line-height: 1;
   pointer-events: auto;
 }
 .mission-exit-button.visible { display: block; }
+.mission-exit-button.screen-covered { display: none; }
 .mission-exit-button:hover, .mission-exit-button:focus-visible { background: #814827; outline: 3px solid #ffd977; }
 
 .decision-overlay {
@@ -263,7 +267,7 @@ html[data-reduced-motion='true'] *, html[data-reduced-motion='true'] *::before, 
   .screen-body { padding: 18px; }
   .library-grid, .competency-grid { grid-template-columns: 1fr; }
   .notification-panel { bottom: 10px; }
-  .mission-exit-button { top: 10px; right: 10px; min-height: 44px; }
+  .mission-exit-button { top: 8px; right: 8px; width: 42px; height: 42px; }
   .decision-overlay { padding: 62px 10px 10px; }
   .decision-overlay { background: rgba(2, 9, 15, .78); }
   .decision-dialog { width: 100%; max-height: calc(100dvh - 72px); border-radius: 16px; padding: 18px 14px; }

@@ -4,6 +4,7 @@ import { ContentService } from '../../services/contentService'
 import { GameUI } from '../../ui/GameUI'
 import { ProgressionService } from '../../services/progressionService'
 import { JoystickState } from '../touchControls'
+import { getObjectiveBeaconLabel } from '../missionPresentation'
 
 const PLAYER_SPEED = 180
 
@@ -112,7 +113,8 @@ export class HubScene extends Phaser.Scene {
 
     if (activeMission) {
       const target = activeMission.missionId === 'splus-c1-m01' ? this.mayaZone : this.brightPathZone
-      this.createObjectiveBeacon(target.x, target.y - 82, saveState.settings.reducedMotion)
+      const beaconLabel = getObjectiveBeaconLabel(saveState.activeMission?.missionId ?? null, saveState.completedMissions.length)
+      this.createObjectiveBeacon(target.x, target.y - 82, saveState.settings.reducedMotion, beaconLabel)
     }
 
     GameUI.get().updateStatus(saveState)
@@ -189,11 +191,11 @@ export class HubScene extends Phaser.Scene {
     })
   }
 
-  private createObjectiveBeacon(x: number, y: number, reducedMotion: boolean) {
+  private createObjectiveBeacon(x: number, y: number, reducedMotion: boolean, text: string) {
     const beacon = this.add.container(x, y)
     const glow = this.add.circle(0, 0, 28, 0xffd35a, 0.2).setStrokeStyle(3, 0xffeb99, 0.95)
     const bulb = this.add.text(0, -2, '💡', { fontSize: '30px' }).setOrigin(0.5)
-    const label = this.add.text(0, 38, 'COME HERE', {
+    const label = this.add.text(0, 38, text, {
       fontFamily: 'Arial', fontSize: '13px', color: '#071421', backgroundColor: '#ffe384',
       fontStyle: 'bold', padding: { x: 8, y: 4 }
     }).setOrigin(0.5)

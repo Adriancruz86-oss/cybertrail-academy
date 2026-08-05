@@ -44,7 +44,7 @@ export class GameUI {
           </div>
         </section>
       </div>
-      <button class="mission-exit-button" aria-label="Exit mission">Exit mission</button>
+      <button class="mission-exit-button" aria-label="Exit mission" title="Exit mission">×</button>
       <section class="decision-overlay" aria-hidden="true" aria-labelledby="decision-prompt">
         <div class="decision-dialog">
           <div class="decision-kicker">Make a decision</div>
@@ -91,12 +91,14 @@ export class GameUI {
     })
     this.overlay.setAttribute('aria-hidden', 'false')
     this.overlay.classList.add('visible')
+    this.missionExitButton.classList.add('screen-covered')
     ;(this.root.querySelector('.screen-close') as HTMLButtonElement).focus()
   }
 
   closeScreen() {
     this.overlay.setAttribute('aria-hidden', 'true')
     this.overlay.classList.remove('visible')
+    this.missionExitButton.classList.remove('screen-covered')
   }
 
   showMissionExit(onExit: () => void) {

@@ -110,6 +110,16 @@ Before delivery, run both `npm test` and `npm run build`.
 6. Select Exit Mission at the top right, confirm the campus returns, then re-enter the highlighted building and verify the exact mission stage resumes.
 7. Run `npm test` and `npm run build` before publishing.
 
+## Sprint 8 mission-room testing
+
+1. Enter Mission 1 and confirm Maya Rivera appears on the left, the CWSS operations room fills the scene, and the analyst stands on the right.
+2. Enter a later mission and confirm Jordan Lee and the warmer BrightPath room replace the CWSS presentation.
+3. Complete briefing, investigation, decisions, feedback, and debrief while confirming all live content appears on the central room display.
+4. Verify decision choices remain one-tap controls and do not obscure the mentor or analyst on desktop.
+5. Repeat a representative mission at 390×844 and 844×390 and confirm the expanded decision panel remains readable and scrollable.
+6. Exit and resume during every mission stage, confirming presentation changes never alter the saved stage, evidence, mastery credit, or rewards.
+7. Enable reduced motion and confirm the analyst idle movement stops.
+
 ## Architecture
 
 - `src/game/scenes`: Phaser scene flow

@@ -5,6 +5,7 @@ import { MasteryService } from '../../services/masteryService'
 import { GameUI } from '../../ui/GameUI'
 import { ProgressionService } from '../../services/progressionService'
 import { MissionSessionService } from '../../services/missionSessionService'
+import { getMissionPresentation } from '../missionPresentation'
 import type { MissionActivityOption, MissionStage } from '../../types'
 
 type MissionSceneData = { missionId?: string }
@@ -18,6 +19,12 @@ export class MissionScene extends Phaser.Scene {
   init(data: MissionSceneData) {
     const save = SaveService.get()
     this.missionId = data?.missionId ?? save.activeMission?.missionId ?? ProgressionService.getNextMission(save)?.missionId ?? ''
+  }
+
+  preload() {
+    this.load.image('cwss-mission-room', new URL('../../assets/cwss-mission-room.png', import.meta.url).href)
+    this.load.image('brightpath-mission-room', new URL('../../assets/brightpath-mission-room.png', import.meta.url).href)
+    this.load.image('mission-analyst', new URL('../../assets/analyst-sprite.png', import.meta.url).href)
   }
 
   create() {
@@ -48,20 +55,25 @@ export class MissionScene extends Phaser.Scene {
   private renderStage() {
     GameUI.get().hideDecision()
     this.children.removeAll()
-    this.cameras.main.setBackgroundColor(0x08101c)
     const mission = ContentService.getMission(this.missionId)!
     const session = SaveService.get().activeMission!
+    this.renderRoom(session.stage)
 
-    this.add.text(40, 28, mission.title, { fontFamily: 'Arial', fontSize: this.mobile ? '38px' : '28px', color: '#ffffff', fontStyle: 'bold' })
-    this.add.text(40, this.mobile ? 78 : 68, this.stageLabel(session.stage), { fontFamily: 'Arial', fontSize: this.mobile ? '25px' : '15px', color: '#8fd3ff', fontStyle: 'bold' })
+    this.add.text(480, 91, mission.title, {
+      fontFamily: 'Arial', fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
+      align: 'center', wordWrap: { width: 390 }
+    }).setOrigin(0.5, 0)
+    this.add.text(480, 72, this.stageLabel(session.stage), {
+      fontFamily: 'Arial', fontSize: '12px', color: '#8fd3ff', fontStyle: 'bold', letterSpacing: 2
+    }).setOrigin(0.5)
 
     if (session.stage === 'briefing') {
       this.addBody(mission.briefing)
       this.addAction('Begin investigation', () => this.setStage('investigation'))
     } else if (session.stage === 'investigation') {
       const item = mission.investigations[session.investigationIndex]
-      this.add.text(40, 120, item.title, { fontFamily: 'Arial', fontSize: this.mobile ? '34px' : '22px', color: '#ffffff', fontStyle: 'bold' })
-      this.addBody(item.body, 165)
+      this.add.text(480, 142, item.title, { fontFamily: 'Arial', fontSize: '20px', color: '#ffffff', fontStyle: 'bold', align: 'center', wordWrap: { width: 380 } }).setOrigin(0.5, 0)
+      this.addBody(item.body, 182)
       SaveService.update((state) => {
         item.discoveryConcepts.forEach((id) => {
           const undiscovered = !state.conceptProgress[id] || state.conceptProgress[id].status === 'unknown'
@@ -71,7 +83,7 @@ export class MissionScene extends Phaser.Scene {
         if (state.activeMission && !state.activeMission.collectedEvidence.includes(item.evidenceId)) state.activeMission.collectedEvidence.push(item.evidenceId)
       })
       this.refreshLearningUI()
-      if (item.label && item.value) this.add.text(40, 300, `${item.label}: ${item.value}`, { fontFamily: 'Arial', fontSize: this.mobile ? '31px' : '19px', color: '#9ef0b4', wordWrap: { width: 820 } })
+      if (item.label && item.value) this.add.text(480, 314, `${item.label}: ${item.value}`, { fontFamily: 'Arial', fontSize: '16px', color: '#9ef0b4', align: 'center', wordWrap: { width: 370 } }).setOrigin(0.5, 0)
       const last = session.investigationIndex === mission.investigations.length - 1
       this.addAction(last ? 'Make a decision' : 'Inspect next clue', () => {
         if (last) this.setStage('decision')
@@ -102,7 +114,7 @@ export class MissionScene extends Phaser.Scene {
     } else {
       this.addBody(mission.debrief)
       const evidenceNames = mission.investigations.filter((item) => session.collectedEvidence.includes(item.evidenceId)).map((item) => item.title)
-      this.add.text(40, 300, `Evidence collected: ${evidenceNames.join(', ')}\nDecisions: ${session.decisions.length} · Correct: ${session.decisions.filter((item) => item.correct).length}\nMastery evidence earned: ${session.masteryEvidenceEarned.join(', ') || 'None'}\nNew CyberDex entries: ${session.discoveredConcepts.join(', ') || 'None'}`, { fontFamily: 'Arial', fontSize: this.mobile ? '25px' : '16px', color: '#9fd4ff', lineSpacing: 4, wordWrap: { width: 820 } })
+      this.add.text(480, 285, `Evidence: ${evidenceNames.join(', ')}\nDecisions: ${session.decisions.length} · Correct: ${session.decisions.filter((item) => item.correct).length}\nMastery evidence: ${session.masteryEvidenceEarned.join(', ') || 'None'}\nCyberDex discoveries: ${session.discoveredConcepts.join(', ') || 'None'}`, { fontFamily: 'Arial', fontSize: '14px', color: '#9fd4ff', align: 'center', lineSpacing: 4, wordWrap: { width: 390 } }).setOrigin(0.5, 0)
       this.addAction('Complete mission', () => {
         SaveService.update((state) => { state.activeMission = null })
         this.refreshLearningUI()
@@ -115,9 +127,9 @@ export class MissionScene extends Phaser.Scene {
     const mission = ContentService.getMission(this.missionId)!
     const session = SaveService.get().activeMission!
     const activity = this.getActivities()[session.activityIndex]
-    this.add.text(40, 125, 'Review the question and choices in the decision panel.', {
-      fontFamily: 'Arial', fontSize: this.mobile ? '32px' : '20px', color: '#dbeafe'
-    })
+    this.add.text(480, 180, 'Review the situation and choose the strongest response.', {
+      fontFamily: 'Arial', fontSize: '18px', color: '#dbeafe', align: 'center', wordWrap: { width: 360 }
+    }).setOrigin(0.5)
     GameUI.get().showDecision({
       activity,
       hint: mission.hint,
@@ -166,14 +178,29 @@ export class MissionScene extends Phaser.Scene {
     this.renderStage()
   }
 
-  private addBody(body: string, y = 125) {
-    this.add.text(40, y, body, { fontFamily: 'Arial', fontSize: this.mobile ? '34px' : '20px', color: '#dbeafe', lineSpacing: 8, wordWrap: { width: 820 } })
+  private renderRoom(stage: MissionStage) {
+    const { width, height } = this.scale
+    const presentation = getMissionPresentation(this.missionId)
+    this.add.image(width / 2, height / 2, presentation.roomKey).setDisplaySize(width, height)
+    this.add.rectangle(480, 264, 440, 398, 0x06111d, 0.84).setStrokeStyle(2, presentation.accent, 0.8)
+    const analyst = this.add.image(850, 484, 'mission-analyst').setDisplaySize(118, 177)
+    this.add.rectangle(144, 551, 222, 58, 0x06111d, 0.88).setStrokeStyle(1, presentation.accent, 0.75)
+    this.add.text(144, 539, presentation.mentorName, { fontFamily: 'Arial', fontSize: '16px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5)
+    this.add.text(144, 561, presentation.mentorRole, { fontFamily: 'Arial', fontSize: '12px', color: '#c8e8fa' }).setOrigin(0.5)
+    this.add.text(850, 588, 'YOU', { fontFamily: 'Arial', fontSize: '12px', color: '#ffffff', backgroundColor: '#071421cc', padding: { x: 8, y: 4 } }).setOrigin(0.5)
+    if (stage === 'briefing' && SaveService.get().settings.reducedMotion === false) {
+      this.tweens.add({ targets: analyst, y: 496, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' })
+    }
+  }
+
+  private addBody(body: string, y = 145) {
+    this.add.text(480, y, body, { fontFamily: 'Arial', fontSize: '17px', color: '#dbeafe', align: 'center', lineSpacing: 6, wordWrap: { width: 382 } }).setOrigin(0.5, 0)
   }
 
   private addAction(label: string, action: () => void) {
     const bg = this.add.rectangle(0, 0, 300, 64, 0x2f80ed)
     const text = this.add.text(0, 0, label, { fontFamily: 'Arial', fontSize: this.mobile ? '28px' : '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5)
-    const button = this.add.container(480, 550, [bg, text]).setSize(300, 64).setInteractive(new Phaser.Geom.Rectangle(-150, -32, 300, 64), Phaser.Geom.Rectangle.Contains, true)
+    const button = this.add.container(480, 452, [bg, text]).setSize(300, 64).setInteractive(new Phaser.Geom.Rectangle(-150, -32, 300, 64), Phaser.Geom.Rectangle.Contains, true)
     button.on('pointerdown', action)
   }
 

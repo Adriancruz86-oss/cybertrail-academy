@@ -294,5 +294,90 @@ export const concepts: Record<string, ConceptRecord> = {
     conceptId: 'account-lockout', name: 'Account lockout', fullName: 'Authentication lockout control', domain: 'identity-access',
     plainDefinition: 'Temporarily blocking sign-in after suspicious failures.', technicalDefinition: 'A threshold control that restricts authentication after repeated failed attempts.',
     whyItExists: 'To slow automated attacks while balancing denial-of-service and user-access risks.', relatedConcepts: ['authentication-logs', 'credential-stuffing', 'mfa'], commonMisconceptions: ['Permanent lockout is always the safest setting.']
+  },
+  'impossible-travel': {
+    conceptId: 'impossible-travel', name: 'Impossible travel', fullName: 'Impossible-travel detection', domain: 'security-operations',
+    plainDefinition: 'Sign-ins from locations too far apart to be physically possible in the elapsed time.', technicalDefinition: 'Behavioral detection comparing authentication geolocation and time to identify infeasible movement.',
+    whyItExists: 'To flag possible use of stolen accounts.', relatedConcepts: ['behavioral-analytics', 'account-compromise', 'false-positive'], commonMisconceptions: ['Every impossible-travel alert proves compromise.']
+  },
+  'behavioral-analytics': {
+    conceptId: 'behavioral-analytics', name: 'Behavioral analytics', fullName: 'User and entity behavioral analytics', domain: 'security-operations',
+    plainDefinition: 'Finding risk by comparing activity with normal behavior and context.', technicalDefinition: 'Analysis of identity and system behavior to detect anomalous patterns relative to baselines and peers.',
+    whyItExists: 'To identify suspicious activity that static rules may miss.', relatedConcepts: ['impossible-travel', 'authentication-logs', 'security-context'], commonMisconceptions: ['An anomaly is automatically malicious.']
+  },
+  'account-compromise': {
+    conceptId: 'account-compromise', name: 'Account compromise', fullName: 'Compromised user account', domain: 'identity-access',
+    plainDefinition: 'An unauthorized person can use a legitimate account.', technicalDefinition: 'Loss of exclusive control over authentication credentials, sessions, or identity factors.',
+    whyItExists: 'To distinguish misuse of valid identity from ordinary failed attacks.', relatedConcepts: ['mfa', 'authentication-logs', 'impossible-travel'], commonMisconceptions: ['Only failed logins indicate account compromise.']
+  },
+  'security-context': {
+    conceptId: 'security-context', name: 'Security context', fullName: 'Contextual security information', domain: 'security-operations',
+    plainDefinition: 'Supporting facts that change how an event should be interpreted.', technicalDefinition: 'Identity, device, network, location, time, and business information used to evaluate security events.',
+    whyItExists: 'To distinguish meaningful risk from expected behavior.', relatedConcepts: ['behavioral-analytics', 'false-positive'], commonMisconceptions: ['One indicator is enough to make every decision.']
+  },
+  'sql-injection': {
+    conceptId: 'sql-injection', name: 'SQL injection', fullName: 'Structured Query Language injection', domain: 'public-web',
+    plainDefinition: 'Malicious input that changes a database query.', technicalDefinition: 'Injection of SQL syntax through untrusted input that is concatenated into database commands.',
+    whyItExists: 'To manipulate database queries, access data, or alter application behavior.', relatedConcepts: ['input-validation', 'parameterized-queries', 'waf'], commonMisconceptions: ['Blocking quotation marks completely fixes SQL injection.']
+  },
+  'input-validation': {
+    conceptId: 'input-validation', name: 'Input validation', fullName: 'Application input validation', domain: 'public-web',
+    plainDefinition: 'Checking that input has the expected type, form, and bounds.', technicalDefinition: 'Enforcing syntactic and semantic constraints on untrusted input before processing.',
+    whyItExists: 'To reject malformed or unexpected data and reduce attack paths.', relatedConcepts: ['sql-injection', 'parameterized-queries'], commonMisconceptions: ['Client-side validation alone protects the server.']
+  },
+  'parameterized-queries': {
+    conceptId: 'parameterized-queries', name: 'Parameterized queries', fullName: 'Parameterized database queries', domain: 'public-web',
+    plainDefinition: 'Keeping user data separate from database instructions.', technicalDefinition: 'Prepared database statements that bind untrusted values as parameters instead of executable SQL syntax.',
+    whyItExists: 'To prevent input from changing query structure.', relatedConcepts: ['sql-injection', 'input-validation'], commonMisconceptions: ['Escaping input manually is always equivalent to parameterization.']
+  },
+  waf: {
+    conceptId: 'waf', name: 'WAF', fullName: 'Web Application Firewall', domain: 'public-web',
+    plainDefinition: 'A control that filters suspicious web requests.', technicalDefinition: 'An application-layer security control that inspects and blocks HTTP traffic using rules and behavioral signals.',
+    whyItExists: 'To provide monitoring and protection for web applications, including temporary compensating controls.', relatedConcepts: ['sql-injection', 'input-validation', 'security-logging'], commonMisconceptions: ['A WAF eliminates the need to fix vulnerable code.']
+  },
+  'security-logging': {
+    conceptId: 'security-logging', name: 'Security logging', fullName: 'Security event logging', domain: 'security-operations',
+    plainDefinition: 'Recording useful events for detection and investigation.', technicalDefinition: 'Capturing timestamped, integrity-protected operational and security events with sufficient context.',
+    whyItExists: 'To support detection, response, evidence, and accountability.', relatedConcepts: ['authentication-logs', 'sql-injection', 'alert-quality'], commonMisconceptions: ['Collecting every possible event automatically produces useful detection.']
+  },
+  'alert-quality': {
+    conceptId: 'alert-quality', name: 'Alert quality', fullName: 'Security alert quality', domain: 'security-operations',
+    plainDefinition: 'How accurately and usefully an alert represents security risk.', technicalDefinition: 'The precision, recall, context, severity, and actionability of detection output.',
+    whyItExists: 'To focus analysts on meaningful events without missing dangerous activity.', relatedConcepts: ['true-positive', 'false-positive', 'false-negative', 'alert-tuning'], commonMisconceptions: ['More alerts always means better security.']
+  },
+  'true-positive': {
+    conceptId: 'true-positive', name: 'True positive', fullName: 'True-positive detection', domain: 'security-operations',
+    plainDefinition: 'An alert correctly identifies malicious activity.', technicalDefinition: 'A positive detection result where the condition being detected is actually present.',
+    whyItExists: 'To identify detections that correctly require attention.', relatedConcepts: ['alert-quality', 'false-positive'], commonMisconceptions: ['True positive means the attack succeeded.']
+  },
+  'false-positive': {
+    conceptId: 'false-positive', name: 'False positive', fullName: 'False-positive detection', domain: 'security-operations',
+    plainDefinition: 'An alert fires for activity that is actually benign.', technicalDefinition: 'A positive detection result where the target condition is absent.',
+    whyItExists: 'To identify detection noise that may need context or tuning.', relatedConcepts: ['alert-quality', 'true-positive', 'alert-tuning'], commonMisconceptions: ['False positives should always be ignored without investigation.']
+  },
+  'true-negative': {
+    conceptId: 'true-negative', name: 'True negative', fullName: 'True-negative detection', domain: 'security-operations',
+    plainDefinition: 'No alert occurs and the activity is benign.', technicalDefinition: 'A negative detection result where the target condition is absent.',
+    whyItExists: 'To describe correct non-alerting behavior.', relatedConcepts: ['alert-quality', 'false-negative'], commonMisconceptions: ['A true negative is a missed attack.']
+  },
+  'false-negative': {
+    conceptId: 'false-negative', name: 'False negative', fullName: 'False-negative detection', domain: 'security-operations',
+    plainDefinition: 'Malicious activity occurs without the expected alert.', technicalDefinition: 'A negative detection result where the target condition is actually present.',
+    whyItExists: 'To identify dangerous detection gaps.', relatedConcepts: ['alert-quality', 'true-negative', 'detection-risk'], commonMisconceptions: ['No alert proves nothing malicious happened.']
+  },
+  'alert-tuning': {
+    conceptId: 'alert-tuning', name: 'Alert tuning', fullName: 'Security detection tuning', domain: 'security-operations',
+    plainDefinition: 'Adjusting detection logic to improve useful alerts.', technicalDefinition: 'Refining thresholds, conditions, exceptions, enrichment, and severity to improve detection performance.',
+    whyItExists: 'To reduce noise without creating unacceptable detection gaps.', relatedConcepts: ['alert-quality', 'false-positive', 'detection-risk'], commonMisconceptions: ['Tuning means disabling noisy detections.']
+  },
+  'detection-risk': {
+    conceptId: 'detection-risk', name: 'Detection risk', fullName: 'Detection coverage risk', domain: 'security-operations',
+    plainDefinition: 'The danger that detection logic misses or misprioritizes harmful activity.', technicalDefinition: 'Risk created by gaps, latency, poor context, or inaccurate prioritization in security monitoring.',
+    whyItExists: 'To balance false-positive reduction against missed attacks.', relatedConcepts: ['false-negative', 'alert-tuning', 'analyst-prioritization'], commonMisconceptions: ['Eliminating all false positives has no downside.']
+  },
+  'analyst-prioritization': {
+    conceptId: 'analyst-prioritization', name: 'Analyst prioritization', fullName: 'Security alert prioritization', domain: 'security-operations',
+    plainDefinition: 'Ordering investigations by credible risk and impact.', technicalDefinition: 'Risk-based triage using severity, confidence, asset value, exposure, and available context.',
+    whyItExists: 'To use limited analyst attention where it reduces the most risk.', relatedConcepts: ['alert-quality', 'detection-risk', 'security-context'], commonMisconceptions: ['The newest alert should always be investigated first.']
   }
 }

@@ -64,6 +64,18 @@ Before delivery, run both `npm test` and `npm run build`.
 8. Confirm Sprint 5 CyberDex discoveries and competency tiles remain visible instead of being hidden behind earlier concept limits.
 9. Repeat Missions 7–9 with touch controls in phone portrait and landscape, then confirm WASD and E remain functional on desktop.
 
+## Sprint 6 detection and application-security testing
+
+1. Complete Mission 10 and confirm the correct response uses device, network, timing, and user context rather than treating location alone as proof.
+2. Use a hint or incorrect response in Mission 10 and confirm impossible-travel evidence does not receive competency credit.
+3. Complete Mission 11 and verify parameterized queries are presented as the root fix while validation, logging, scoping, and WAF tuning remain supporting controls.
+4. Complete all four Mission 12 classifications: true positive, false positive, true negative, and false negative.
+5. Confirm each Mission 12 activity tracks its own first attempt and hint state.
+6. Complete the first two alert classifications correctly without hints and confirm Alert Quality becomes competent across distinct contexts.
+7. Refresh between Mission 12 classifications and confirm the current activity, attempts, evidence, and decisions resume.
+8. Confirm Missions 10–12 unlock sequentially, grant rewards once, and populate their CyberDex and Competency Matrix entries.
+9. Repeat Missions 10–12 at phone portrait and landscape sizes and verify all four-option activities remain readable and touchable.
+
 ## What is implemented
 
 - Phaser 3 player movement and hub interaction

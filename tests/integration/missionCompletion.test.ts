@@ -5,7 +5,7 @@ import { ProgressionService } from '../../src/services/progressionService'
 import { MasteryService } from '../../src/services/masteryService'
 
 describe('mission completion integration', () => {
-  it('completes missions 1-9, unlocks concepts, and reaches competency across distinct contexts', () => {
+  it('completes missions 1-12, unlocks concepts, and reaches competency across distinct contexts', () => {
     const state = createDefaultSave()
     for (const mission of ContentService.getAllMissions()) {
       expect(ProgressionService.isAvailable(state, mission.missionId)).toBe(true)
@@ -16,9 +16,13 @@ describe('mission completion integration', () => {
       }))
       expect(ProgressionService.complete(state, mission.missionId, mission.rewards.xp)).toBe(true)
     }
-    expect(state.completedMissions).toEqual(['splus-c1-m01', 'splus-c1-m02', 'splus-c1-m03', 'splus-c1-m04', 'splus-c1-m05', 'splus-c1-m06', 'splus-c1-m07', 'splus-c1-m08', 'splus-c1-m09'])
+    expect(state.completedMissions).toEqual([
+      'splus-c1-m01', 'splus-c1-m02', 'splus-c1-m03', 'splus-c1-m04', 'splus-c1-m05', 'splus-c1-m06',
+      'splus-c1-m07', 'splus-c1-m08', 'splus-c1-m09', 'splus-c1-m10', 'splus-c1-m11', 'splus-c1-m12'
+    ])
     expect(state.conceptProgress['least-functionality'].status).toBe('competent')
     expect(state.conceptProgress['least-functionality'].currentCompetencyStreak).toBe(2)
     expect(state.conceptProgress.trust.status).toBe('competent')
+    expect(state.conceptProgress['alert-quality'].status).toBe('competent')
   })
 })

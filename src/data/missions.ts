@@ -379,5 +379,123 @@ export const missions: MissionData[] = [
       { conceptId: 'account-lockout', evidenceType: 'reasoning', contextId: 'reused-password-attack', firstAttemptRequired: true, hintDisqualifies: true, independent: true }
     ],
     rewards: { xp: 210, cyberDexEntries: ['credential-stuffing', 'password-reuse', 'mfa', 'authentication-logs', 'account-lockout'] }
+  },
+  {
+    missionId: 'splus-c1-m10',
+    title: 'The 2 A.M. Login',
+    description: 'Investigate two distant sign-ins that appear physically impossible.',
+    objectives: ['Evaluate impossible-travel evidence', 'Use context before declaring account compromise.'],
+    prerequisites: ['splus-c1-m09'],
+    concepts: ['impossible-travel', 'behavioral-analytics', 'account-compromise', 'security-context', 'false-positive', 'authentication-logs'],
+    briefing: 'At 2 A.M., BrightPath flags the same account in New York and London only twelve minutes apart. Maya asks for a risk-based response, not an automatic verdict.',
+    investigations: [
+      { evidenceId: 'travel-logins', title: 'Compare the sign-ins', body: 'Both attempts used the correct password. The London event followed the New York event twelve minutes later.', label: 'Travel time', value: 'Physically impossible', discoveryConcepts: ['impossible-travel', 'authentication-logs'] },
+      { evidenceId: 'device-context', title: 'Compare device context', body: 'New York used the employee laptop and normal browser. London used an unknown device with a new session cookie.', label: 'Device match', value: 'No', discoveryConcepts: ['behavioral-analytics', 'security-context'] },
+      { evidenceId: 'network-context', title: 'Check network and user context', body: 'The employee is not using the corporate VPN and confirms they are asleep in New York.', label: 'User confirmation', value: 'London sign-in not recognized', discoveryConcepts: ['account-compromise', 'false-positive'] }
+    ],
+    activity: { type: 'configuration', prompt: 'What is the best response to the combined evidence?', options: [
+      { id: 'contain-verify', label: 'Revoke sessions, require credential reset and MFA verification, preserve logs, and investigate the unknown device', correct: true, explanation: 'Correct. The impossible timing plus device, network, and user context supports compromise and warrants contained, evidence-preserving action.' },
+      { id: 'ignore-anomaly', label: 'Ignore the alert because geolocation is never exact', correct: false, explanation: 'Geolocation can be imperfect, but the unknown device and user confirmation independently increase the compromise risk.' },
+      { id: 'travel-proves', label: 'Declare compromise from distance alone without checking context', correct: false, explanation: 'Impossible travel is an indicator, not proof. VPNs, mobile networks, and location errors can produce false positives.' },
+      { id: 'lock-company', label: 'Disable every BrightPath account immediately', correct: false, explanation: 'The evidence concerns one account. Organization-wide lockout is disproportionate and harms availability.' }
+    ] },
+    hint: 'Combine time and location with device, network, session, and user-confirmation context.',
+    debrief: 'Impossible travel is a useful behavioral signal, but context determines meaning. Here, the unknown device and user confirmation support account-compromise containment rather than a false-positive dismissal.',
+    masteryEvidence: [
+      { conceptId: 'impossible-travel', evidenceType: 'reasoning', contextId: 'two-city-authentication', firstAttemptRequired: true, hintDisqualifies: true, independent: true },
+      { conceptId: 'behavioral-analytics', evidenceType: 'reasoning', contextId: 'two-city-authentication', firstAttemptRequired: true, hintDisqualifies: true, independent: true },
+      { conceptId: 'account-compromise', evidenceType: 'application', contextId: 'two-city-authentication', firstAttemptRequired: true, hintDisqualifies: true, independent: true }
+    ],
+    rewards: { xp: 220, cyberDexEntries: ['impossible-travel', 'behavioral-analytics', 'account-compromise', 'security-context', 'false-positive', 'authentication-logs'] }
+  },
+  {
+    missionId: 'splus-c1-m11',
+    title: 'Strange Database Requests',
+    description: 'Respond to suspicious web requests attempting to alter database queries.',
+    objectives: ['Recognize SQL-injection evidence', 'Fix the vulnerable query and preserve detection visibility.'],
+    prerequisites: ['splus-c1-m10'],
+    concepts: ['sql-injection', 'input-validation', 'parameterized-queries', 'waf', 'security-logging'],
+    briefing: 'BrightPath logs show unusual characters and SQL keywords in a search parameter. The database returned records that the requesting user should not see.',
+    investigations: [
+      { evidenceId: 'injection-request', title: 'Inspect the web request', body: 'The search parameter contains a quote, a tautology, and a comment sequence designed to change query logic.', label: 'Input fragment', value: "' OR 1=1 --", discoveryConcepts: ['sql-injection', 'input-validation'] },
+      { evidenceId: 'query-code', title: 'Inspect application code', body: 'The application concatenates raw request input directly into the SQL command string.', label: 'Query construction', value: 'String concatenation', discoveryConcepts: ['parameterized-queries'] },
+      { evidenceId: 'control-coverage', title: 'Inspect controls and logs', body: 'The WAF recorded but did not block the pattern. Application and database logs preserve the affected request and response.', label: 'Current controls', value: 'Detection only', discoveryConcepts: ['waf', 'security-logging'] }
+    ],
+    activity: { type: 'configuration', prompt: 'Which response fixes the root cause while supporting containment and investigation?', options: [
+      { id: 'parameterize-contain', label: 'Use parameterized queries and server-side validation, preserve logs, scope exposure, and tune a temporary WAF rule', correct: true, explanation: 'Correct. Parameterization fixes the query boundary, validation enforces expected input, logs support scope, and the WAF can provide temporary protection.' },
+      { id: 'waf-only', label: 'Add one WAF signature and leave the vulnerable code unchanged', correct: false, explanation: 'A WAF is useful defense in depth, but signatures can be bypassed and do not remove unsafe query construction.' },
+      { id: 'hide-errors', label: 'Hide database errors from users without changing the query', correct: false, explanation: 'Reducing error detail may limit information leakage but does not prevent injection.' },
+      { id: 'block-quotes', label: 'Delete quotation marks from every request and consider the issue fixed', correct: false, explanation: 'Ad hoc character blocking is brittle. Parameterized queries keep data separate from SQL syntax regardless of encoding tricks.' }
+    ] },
+    hint: 'Repair the boundary between data and SQL instructions, then use validation, logging, and the WAF as supporting layers.',
+    debrief: 'SQL injection occurs when untrusted data becomes executable query syntax. Parameterized queries address the root cause; server-side validation, logging, scoping, and WAF tuning add defense and response support.',
+    masteryEvidence: [
+      { conceptId: 'sql-injection', evidenceType: 'reasoning', contextId: 'brightpath-search-injection', firstAttemptRequired: true, hintDisqualifies: true, independent: true },
+      { conceptId: 'parameterized-queries', evidenceType: 'application', contextId: 'brightpath-search-injection', firstAttemptRequired: true, hintDisqualifies: true, independent: true },
+      { conceptId: 'input-validation', evidenceType: 'application', contextId: 'brightpath-search-injection', firstAttemptRequired: true, hintDisqualifies: true, independent: true }
+    ],
+    rewards: { xp: 240, cyberDexEntries: ['sql-injection', 'input-validation', 'parameterized-queries', 'waf', 'security-logging'] }
+  },
+  {
+    missionId: 'splus-c1-m12',
+    title: 'The Alert Flood',
+    description: 'Classify SIEM outcomes and improve detection without hiding dangerous gaps.',
+    objectives: ['Classify positive and negative detection outcomes', 'Prioritize and tune alerts using risk.'],
+    prerequisites: ['splus-c1-m11'],
+    concepts: ['alert-quality', 'true-positive', 'false-positive', 'true-negative', 'false-negative', 'alert-tuning', 'detection-risk', 'analyst-prioritization'],
+    briefing: 'The BrightPath SIEM produces a flood of mixed-quality alerts. Maya asks you to classify outcomes before changing any detection rules.',
+    investigations: [
+      { evidenceId: 'alert-volume', title: 'Review alert volume', body: 'Analysts receive hundreds of events, but severity and context do not consistently match actual risk.', label: 'Problem', value: 'High volume, uneven quality', discoveryConcepts: ['alert-quality', 'analyst-prioritization'] },
+      { evidenceId: 'detection-matrix', title: 'Review the detection matrix', body: 'Every outcome depends on two facts: whether the detection fired and whether malicious activity was actually present.', label: 'Outcomes', value: 'TP, FP, TN, FN', discoveryConcepts: ['true-positive', 'false-positive', 'true-negative', 'false-negative'] },
+      { evidenceId: 'tuning-risk', title: 'Review tuning risk', body: 'Reducing noise can help analysts, but overly broad exceptions may suppress real attacks.', label: 'Tradeoff', value: 'Noise reduction versus missed detection', discoveryConcepts: ['alert-tuning', 'detection-risk'] }
+    ],
+    activity: { type: 'classification', prompt: 'A SQL-injection alert fires, and investigation confirms malicious query manipulation. Classify it.', options: [
+      { id: 'sql-tp', label: 'True positive', correct: true, explanation: 'Correct. The detection fired and the malicious condition was present.' },
+      { id: 'sql-fp', label: 'False positive', correct: false, explanation: 'A false positive fires when the condition is benign, but this activity was confirmed malicious.' },
+      { id: 'sql-fn', label: 'False negative', correct: false, explanation: 'A false negative would mean the malicious activity occurred without the expected alert.' },
+      { id: 'sql-tn', label: 'True negative', correct: false, explanation: 'A true negative has no alert and no malicious condition.' }
+    ] },
+    activities: [
+      { type: 'classification', prompt: 'A SQL-injection alert fires, and investigation confirms malicious query manipulation. Classify it.', options: [
+        { id: 'sql-tp', label: 'True positive', correct: true, explanation: 'Correct. The detection fired and the malicious condition was present.' },
+        { id: 'sql-fp', label: 'False positive', correct: false, explanation: 'A false positive fires when the condition is benign, but this activity was confirmed malicious.' },
+        { id: 'sql-fn', label: 'False negative', correct: false, explanation: 'A false negative would mean the malicious activity occurred without the expected alert.' },
+        { id: 'sql-tn', label: 'True negative', correct: false, explanation: 'A true negative has no alert and no malicious condition.' }
+      ] },
+      { type: 'classification', prompt: 'An impossible-travel alert fires, but investigation confirms an approved corporate VPN changed the location. Classify it.', options: [
+        { id: 'vpn-fp', label: 'False positive', correct: true, explanation: 'Correct. The alert fired, but the investigated activity was benign.' },
+        { id: 'vpn-tp', label: 'True positive', correct: false, explanation: 'The condition was explained by an approved VPN, so this was not confirmed malicious activity.' },
+        { id: 'vpn-fn', label: 'False negative', correct: false, explanation: 'The system did alert, so this cannot be a negative detection outcome.' },
+        { id: 'vpn-tn', label: 'True negative', correct: false, explanation: 'A true negative would not generate an alert.' }
+      ] },
+      { type: 'classification', prompt: 'A normal employee login occurs, and no risky-authentication alert fires. Classify it.', options: [
+        { id: 'normal-tn', label: 'True negative', correct: true, explanation: 'Correct. No alert fired and no malicious condition was present.' },
+        { id: 'normal-fn', label: 'False negative', correct: false, explanation: 'A false negative requires malicious activity that the detection missed.' },
+        { id: 'normal-tp', label: 'True positive', correct: false, explanation: 'No positive alert occurred.' },
+        { id: 'normal-fp', label: 'False positive', correct: false, explanation: 'A false positive requires an alert on benign activity.' }
+      ] },
+      { type: 'classification', prompt: 'Confirmed data exfiltration occurs, but the expected transfer alert never fires. Classify it.', options: [
+        { id: 'exfil-fn', label: 'False negative', correct: true, explanation: 'Correct. Malicious activity was present, but the detection failed to alert.' },
+        { id: 'exfil-tn', label: 'True negative', correct: false, explanation: 'A true negative requires that no malicious activity occurred.' },
+        { id: 'exfil-tp', label: 'True positive', correct: false, explanation: 'No alert fired, so this cannot be a positive result.' },
+        { id: 'exfil-fp', label: 'False positive', correct: false, explanation: 'No alert fired, and the activity was truly malicious.' }
+      ] }
+    ],
+    hint: 'Ask two questions: did the detection fire, and was the malicious condition actually present?',
+    debrief: 'Alert classification separates detection output from reality. Tuning should reduce false positives while protecting against false negatives, and analyst priority should reflect credible risk and impact.',
+    masteryEvidence: [
+      { conceptId: 'alert-quality', evidenceType: 'application', contextId: 'confirmed-sql-alert', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 0 },
+      { conceptId: 'true-positive', evidenceType: 'application', contextId: 'confirmed-sql-alert', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 0 },
+      { conceptId: 'analyst-prioritization', evidenceType: 'reasoning', contextId: 'confirmed-sql-alert', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 0 },
+      { conceptId: 'alert-quality', evidenceType: 'application', contextId: 'vpn-location-alert', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'false-positive', evidenceType: 'application', contextId: 'vpn-location-alert', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'alert-tuning', evidenceType: 'reasoning', contextId: 'vpn-location-alert', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'alert-quality', evidenceType: 'application', contextId: 'normal-login-no-alert', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 2 },
+      { conceptId: 'true-negative', evidenceType: 'application', contextId: 'normal-login-no-alert', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 2 },
+      { conceptId: 'alert-quality', evidenceType: 'reasoning', contextId: 'missed-exfiltration', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 3 },
+      { conceptId: 'false-negative', evidenceType: 'reasoning', contextId: 'missed-exfiltration', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 3 },
+      { conceptId: 'detection-risk', evidenceType: 'reasoning', contextId: 'missed-exfiltration', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 3 }
+    ],
+    rewards: { xp: 260, cyberDexEntries: ['alert-quality', 'true-positive', 'false-positive', 'true-negative', 'false-negative', 'alert-tuning', 'detection-risk', 'analyst-prioritization'] }
   }
 ]

@@ -2,7 +2,6 @@ import Phaser from 'phaser'
 import { SaveService } from '../../services/saveService'
 import { GameUI } from '../../ui/GameUI'
 import { ContentService } from '../../services/contentService'
-import { ProgressionService } from '../../services/progressionService'
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -95,7 +94,10 @@ export class BootScene extends Phaser.Scene {
     const ui = GameUI.init()
     const state = SaveService.get()
     ui.updateStatus(state)
-    ui.updateMissionLog(ProgressionService.getNextMission(state))
+    ui.updateMissionNavigator(ContentService.getAllMissions(), state, (missionId) => {
+      SaveService.update((save) => { if (save.activeMission?.missionId !== missionId) save.activeMission = null })
+      this.scene.start('MissionScene', { missionId })
+    })
     ui.updateCyberDex(ContentService.getAllConcepts(), state.conceptProgress)
     ui.updateCompetencyMatrix(ContentService.getAllConcepts(), state.conceptProgress)
     ui.showNotification('Enter the campus when you are ready for your assignment.')

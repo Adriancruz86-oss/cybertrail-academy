@@ -120,6 +120,16 @@ Before delivery, run both `npm test` and `npm run build`.
 6. Exit and resume during every mission stage, confirming presentation changes never alter the saved stage, evidence, mastery credit, or rewards.
 7. Enable reduced motion and confirm the analyst idle movement stops.
 
+## Sprint 8.2 results and chapter testing
+
+1. Finish a mission and confirm the room display shows only the narrative debrief before opening Mission Results.
+2. Confirm Mission Results separately lists evidence, CyberDex discoveries, mastery evidence, decisions, and mission XP without text collisions.
+3. Verify the results panel scrolls on phone portrait and Return to Campus clears the active mission only after results are reviewed.
+4. Open the Mission tab and confirm it shows only the current domain chapter, including completed, current/available, and locked states.
+5. Replay a completed mission from the Mission tab and confirm it grants no duplicate XP or same-context mastery credit.
+6. Launch an available mission from the Mission tab and confirm locked missions cannot be selected.
+7. Check the longest briefing, investigation, feedback, and debrief copy in portrait and landscape for overlap.
+
 ## Architecture
 
 - `src/game/scenes`: Phaser scene flow

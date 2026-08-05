@@ -1,5 +1,6 @@
 import type { MissionData, ConceptRecord, SaveState, MissionActivity, MissionActivityOption } from '../types'
 import { SaveService } from '../services/saveService'
+import { getCurrentChapter, getMissionNavigatorStatus } from '../game/missionChapters'
 
 type ScreenName = 'mission' | 'cyberdex' | 'progress' | 'settings'
 
@@ -15,6 +16,7 @@ export class GameUI {
   private overlayTitle: HTMLElement
   private notificationPanel: HTMLElement
   private decisionOverlay: HTMLElement
+  private resultsOverlay: HTMLElement
   private missionExitButton: HTMLButtonElement
 
   private constructor() {
@@ -53,6 +55,14 @@ export class GameUI {
           <button class="decision-hint"></button>
         </div>
       </section>
+      <section class="results-overlay" aria-hidden="true" aria-labelledby="results-title">
+        <div class="results-dialog" role="dialog" aria-modal="true">
+          <div class="results-kicker">Mission complete</div>
+          <h1 id="results-title"></h1>
+          <div class="results-summary"></div>
+          <button class="results-return">Return to campus</button>
+        </div>
+      </section>
       <div class="notification-panel" aria-live="assertive"></div>
     `
     document.body.appendChild(this.root)
@@ -65,6 +75,7 @@ export class GameUI {
     this.overlayTitle = this.root.querySelector('#screen-title') as HTMLElement
     this.notificationPanel = this.root.querySelector('.notification-panel') as HTMLElement
     this.decisionOverlay = this.root.querySelector('.decision-overlay') as HTMLElement
+    this.resultsOverlay = this.root.querySelector('.results-overlay') as HTMLElement
     this.missionExitButton = this.root.querySelector('.mission-exit-button') as HTMLButtonElement
 
     this.root.querySelectorAll<HTMLButtonElement>('[data-screen]').forEach((button) => {
@@ -143,6 +154,37 @@ export class GameUI {
     this.decisionOverlay.classList.remove('visible')
   }
 
+  showMissionResults(args: {
+    title: string
+    evidence: string[]
+    discoveries: string[]
+    mastery: string[]
+    decisions: number
+    correct: number
+    xp: number
+    onReturn: () => void
+  }) {
+    ;(this.resultsOverlay.querySelector('#results-title') as HTMLElement).textContent = args.title
+    const summary = this.resultsOverlay.querySelector('.results-summary') as HTMLElement
+    const list = (items: string[], empty: string) => items.length ? items.map((item) => `<li>${item}</li>`).join('') : `<li>${empty}</li>`
+    summary.innerHTML = `
+      <div class="results-stats"><strong>${args.correct}/${args.decisions}</strong><span>correct decisions</span><strong>+${args.xp}</strong><span>mission XP</span></div>
+      <section><h2>Evidence collected</h2><ul>${list(args.evidence, 'No evidence recorded')}</ul></section>
+      <section><h2>CyberDex discoveries</h2><ul>${list(args.discoveries, 'No new discoveries')}</ul></section>
+      <section><h2>Mastery evidence</h2><ul>${list(args.mastery, 'No qualifying mastery evidence')}</ul></section>
+    `
+    const button = this.resultsOverlay.querySelector('.results-return') as HTMLButtonElement
+    button.onclick = args.onReturn
+    this.resultsOverlay.setAttribute('aria-hidden', 'false')
+    this.resultsOverlay.classList.add('visible')
+    button.focus()
+  }
+
+  hideMissionResults() {
+    this.resultsOverlay.setAttribute('aria-hidden', 'true')
+    this.resultsOverlay.classList.remove('visible')
+  }
+
   updateStatus(state: SaveState) {
     document.documentElement.dataset.textSize = state.settings.textSize
     document.documentElement.dataset.reducedMotion = String(state.settings.reducedMotion)
@@ -168,16 +210,25 @@ export class GameUI {
     })
   }
 
-  updateMissionLog(mission?: MissionData, collectedEvidence: string[] = []) {
-    if (!mission) {
-      this.missionPanel.innerHTML = '<div class="empty-state"><h2>All available missions complete</h2><p>Explore the campus or review your progress.</p></div>'
-      return
-    }
+  updateMissionNavigator(missions: MissionData[], state: SaveState, onLaunch: (missionId: string) => void) {
+    const chapter = getCurrentChapter(state)
+    const chapterMissions = chapter.missionIds.map((id) => missions.find((mission) => mission.missionId === id)).filter(Boolean) as MissionData[]
     this.missionPanel.innerHTML = `
-      <div class="mission-hero"><span>Current assignment</span><h2>${mission.title}</h2><p>${mission.description}</p></div>
-      <div class="mission-objectives"><h3>Objectives</h3>${mission.objectives.map((objective) => `<div class="objective"><span>◆</span>${objective}</div>`).join('')}</div>
-      <div class="evidence-list"><h3>Evidence collected</h3>${collectedEvidence.length ? collectedEvidence.map((id) => `<div>${mission.investigations.find((item) => item.evidenceId === id)?.title ?? id}</div>`).join('') : '<p>No evidence collected yet.</p>'}</div>
+      <div class="chapter-heading"><span>Current chapter · ${chapter.domain}</span><h2>${chapter.title}</h2><p>Completed missions remain replayable. Locked missions open as you progress through this chapter.</p></div>
+      <div class="mission-list">${chapterMissions.map((mission, index) => {
+        const status = getMissionNavigatorStatus(state, mission.missionId, mission.prerequisites)
+        const action = status === 'locked' ? 'Locked' : status === 'current' ? 'Resume' : status === 'completed' ? 'Replay' : 'Start'
+        return `<article class="mission-card mission-${status}"><div class="mission-number">${index + 1}</div><div><span>${status}</span><h3>${mission.title}</h3><p>${mission.description}</p></div><button data-mission-id="${mission.missionId}" ${status === 'locked' ? 'disabled' : ''}>${action}</button></article>`
+      }).join('')}</div>
     `
+    this.missionPanel.querySelectorAll<HTMLButtonElement>('[data-mission-id]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const missionId = button.dataset.missionId!
+        if (state.activeMission && state.activeMission.missionId !== missionId && !window.confirm('Switch missions? Your current in-mission stage will be replaced.')) return
+        this.closeScreen()
+        onLaunch(missionId)
+      })
+    })
   }
 
   updateCyberDex(concepts: Record<string, ConceptRecord>, progress: SaveState['conceptProgress']) {

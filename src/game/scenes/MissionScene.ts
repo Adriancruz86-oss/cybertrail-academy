@@ -42,11 +42,13 @@ export class MissionScene extends Phaser.Scene {
     }
     GameUI.get().showMissionExit(() => {
       GameUI.get().hideDecision()
+      GameUI.get().hideMissionResults()
       GameUI.get().showNotification('Mission paused. Return to the highlighted building when you are ready.')
       this.scene.start('HubScene')
     })
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       GameUI.get().hideDecision()
+      GameUI.get().hideMissionResults()
       GameUI.get().hideMissionExit()
     })
     this.renderStage()
@@ -113,13 +115,7 @@ export class MissionScene extends Phaser.Scene {
       })
     } else {
       this.addBody(mission.debrief)
-      const evidenceNames = mission.investigations.filter((item) => session.collectedEvidence.includes(item.evidenceId)).map((item) => item.title)
-      this.add.text(480, 285, `Evidence: ${evidenceNames.join(', ')}\nDecisions: ${session.decisions.length} · Correct: ${session.decisions.filter((item) => item.correct).length}\nMastery evidence: ${session.masteryEvidenceEarned.join(', ') || 'None'}\nCyberDex discoveries: ${session.discoveredConcepts.join(', ') || 'None'}`, { fontFamily: 'Arial', fontSize: this.mobile ? '20px' : '14px', color: '#9fd4ff', align: 'center', lineSpacing: 4, wordWrap: { width: 390 } }).setOrigin(0.5, 0)
-      this.addAction('Complete mission', () => {
-        SaveService.update((state) => { state.activeMission = null })
-        this.refreshLearningUI()
-        this.scene.start('HubScene')
-      })
+      this.addAction('View mission results', () => this.showMissionResults())
     }
   }
 
@@ -178,6 +174,27 @@ export class MissionScene extends Phaser.Scene {
     this.renderStage()
   }
 
+  private showMissionResults() {
+    const mission = ContentService.getMission(this.missionId)!
+    const session = SaveService.get().activeMission!
+    const conceptNames = ContentService.getAllConcepts()
+    GameUI.get().showMissionResults({
+      title: mission.title,
+      evidence: mission.investigations.filter((item) => session.collectedEvidence.includes(item.evidenceId)).map((item) => item.title),
+      discoveries: session.discoveredConcepts.map((id) => conceptNames[id]?.name ?? id),
+      mastery: session.masteryEvidenceEarned.map((id) => conceptNames[id]?.name ?? id),
+      decisions: session.decisions.length,
+      correct: session.decisions.filter((item) => item.correct).length,
+      xp: mission.rewards.xp,
+      onReturn: () => {
+        GameUI.get().hideMissionResults()
+        SaveService.update((state) => { state.activeMission = null })
+        this.refreshLearningUI()
+        this.scene.start('HubScene')
+      }
+    })
+  }
+
   private renderRoom(stage: MissionStage) {
     const { width, height } = this.scale
     const presentation = getMissionPresentation(this.missionId)
@@ -194,7 +211,12 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private addBody(body: string, y = 145) {
-    this.add.text(480, y, body, { fontFamily: 'Arial', fontSize: this.mobile ? '29px' : '17px', color: '#dbeafe', align: 'center', lineSpacing: this.mobile ? 4 : 6, wordWrap: { width: 382 } }).setOrigin(0.5, 0)
+    this.add.text(480, y, body, { fontFamily: 'Arial', fontSize: `${this.getBodyFontSize(body)}px`, color: '#dbeafe', align: 'center', lineSpacing: this.mobile ? 4 : 6, wordWrap: { width: 382 } }).setOrigin(0.5, 0)
+  }
+
+  private getBodyFontSize(body: string) {
+    if (!this.mobile) return body.length > 260 ? 14 : body.length > 180 ? 15 : 17
+    return body.length > 220 ? 20 : body.length > 150 ? 23 : body.length > 90 ? 26 : 29
   }
 
   private addAction(label: string, action: () => void) {
@@ -214,7 +236,12 @@ export class MissionScene extends Phaser.Scene {
   private refreshLearningUI() {
     const state = SaveService.get()
     GameUI.get().updateStatus(state)
-    GameUI.get().updateMissionLog(ContentService.getMission(this.missionId), state.activeMission?.collectedEvidence ?? [])
+    GameUI.get().updateMissionNavigator(ContentService.getAllMissions(), state, (missionId) => {
+      if (missionId !== this.missionId) SaveService.update((save) => { save.activeMission = null })
+      GameUI.get().hideDecision()
+      GameUI.get().hideMissionResults()
+      this.scene.start('MissionScene', { missionId })
+    })
     GameUI.get().updateCyberDex(ContentService.getAllConcepts(), state.conceptProgress)
     GameUI.get().updateCompetencyMatrix(ContentService.getAllConcepts(), state.conceptProgress)
   }

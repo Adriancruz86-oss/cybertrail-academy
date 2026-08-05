@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { GameUI } from '../../src/ui/GameUI'
 import { createDefaultSave } from '../../src/services/saveService'
 import type { MissionActivity } from '../../src/types'
+import { missions } from '../../src/data/missions'
 
 describe('GameUI navigation', () => {
   it('opens dedicated screens and returns focus to gameplay', () => {
@@ -64,5 +65,26 @@ describe('GameUI navigation', () => {
     expect(exited).toBe(true)
     ui.hideMissionExit()
     expect(exit.classList.contains('visible')).toBe(false)
+  })
+
+  it('renders chapter missions and a separate mission-results panel', () => {
+    const ui = GameUI.get()
+    const state = createDefaultSave()
+    state.completedMissions.push('splus-c1-m01')
+    let launched = ''
+    ui.updateMissionNavigator(missions, state, (missionId) => { launched = missionId })
+    expect(document.querySelectorAll('.mission-card')).toHaveLength(3)
+    expect(document.querySelector('.mission-completed button')?.textContent).toBe('Replay')
+    ;(document.querySelector('.mission-available button') as HTMLButtonElement).click()
+    expect(launched).toBe('splus-c1-m02')
+
+    let returned = false
+    ui.showMissionResults({ title: 'Welcome to the SOC', evidence: ['Incident board'], discoveries: ['Asset'], mastery: [], decisions: 1, correct: 1, xp: 70, onReturn: () => { returned = true } })
+    const results = document.querySelector('.results-overlay') as HTMLElement
+    expect(results.getAttribute('aria-hidden')).toBe('false')
+    expect(document.querySelector('.results-summary')?.textContent).toContain('Incident board')
+    ;(document.querySelector('.results-return') as HTMLButtonElement).click()
+    expect(returned).toBe(true)
+    ui.hideMissionResults()
   })
 })

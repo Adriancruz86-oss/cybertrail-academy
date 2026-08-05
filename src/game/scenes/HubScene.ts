@@ -118,7 +118,10 @@ export class HubScene extends Phaser.Scene {
     }
 
     GameUI.get().updateStatus(saveState)
-    GameUI.get().updateMissionLog(activeMission)
+    GameUI.get().updateMissionNavigator(ContentService.getAllMissions(), saveState, (missionId) => {
+      SaveService.update((state) => { if (state.activeMission?.missionId !== missionId) state.activeMission = null })
+      this.scene.start('MissionScene', { missionId })
+    })
     GameUI.get().updateCyberDex(ContentService.getAllConcepts(), saveState.conceptProgress)
     GameUI.get().updateCompetencyMatrix(ContentService.getAllConcepts(), saveState.conceptProgress)
     if (activeMission) {

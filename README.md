@@ -91,7 +91,7 @@ Before delivery, run both `npm test` and `npm run build`.
 ## What is implemented
 
 - Phaser 3 player movement and hub interaction
-- Data-driven mission loading for missions 1–3
+- Data-driven mission loading for missions 1–15
 - Save system using browser localStorage
 - Mastery engine with first-attempt, distinct-context competency streak rules
 - CyberDex and Competency Matrix UI panels
@@ -130,6 +130,17 @@ Before delivery, run both `npm test` and `npm run build`.
 6. Launch an available mission from the Mission tab and confirm locked missions cannot be selected.
 7. Check the longest briefing, investigation, feedback, and debrief copy in portrait and landscape for overlap.
 
+## Sprint 9 campaign-completion testing
+
+1. Complete Stop the Spread and verify its containment, scope, evidence-preservation, and eradication decisions resume after refresh.
+2. Complete The Backup Decision and confirm its backup, RPO/RTO, and clean-restoration decisions enforce first-attempt and hint rules independently.
+3. Confirm Mission 15 returns the player to CWSS Headquarters for the Incident Commander district assessment.
+4. Complete all five capstone decisions and verify earlier concepts receive assessment evidence without duplicate same-context mastery credit.
+5. Confirm campaign completion appears only after Mission 15, survives refresh, and awards the Public Web Defender achievement.
+6. Review Progress and confirm campaign percentage, achievements, chapter progress, and the Competency Matrix remain readable and scrollable.
+7. Replay Missions 13–15 and confirm rewards are not granted twice.
+8. Repeat the final chapter at 390×844 and 844×390, then run `npm test` and `npm run build`.
+
 ## Architecture
 
 - `src/game/scenes`: Phaser scene flow
@@ -146,5 +157,5 @@ The production base path is `/cybertrail-academy/` for GitHub Pages. The service
 
 ## Notes
 
-- Mission 4 is intentionally excluded for now.
-- This is a vertical slice only; more missions and polish remain.
+- The First Response campaign contains Missions 1–15.
+- Additional campaigns, districts, accounts, multiplayer, and final production media remain out of scope.

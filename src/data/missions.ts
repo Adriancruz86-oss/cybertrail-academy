@@ -497,5 +497,161 @@ export const missions: MissionData[] = [
       { conceptId: 'detection-risk', evidenceType: 'reasoning', contextId: 'missed-exfiltration', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 3 }
     ],
     rewards: { xp: 260, cyberDexEntries: ['alert-quality', 'true-positive', 'false-positive', 'true-negative', 'false-negative', 'alert-tuning', 'detection-risk', 'analyst-prioritization'] }
+  },
+  {
+    missionId: 'splus-c1-m13',
+    title: 'Stop the Spread',
+    description: 'Contain a compromised web server before the attacker reaches more internal systems.',
+    objectives: ['Contain affected systems and accounts', 'Determine scope while preserving evidence', 'Prepare safe eradication.'],
+    prerequisites: ['splus-c1-m12'],
+    concepts: ['incident-response', 'containment', 'incident-scope', 'evidence-preservation', 'lateral-movement', 'eradication'],
+    briefing: 'BrightPath confirms that the compromised portal is communicating with internal systems. Act quickly without destroying the evidence needed to understand the intrusion.',
+    investigations: [
+      { evidenceId: 'east-west-traffic', title: 'Inspect internal traffic', body: 'The web server opened unusual administrative connections to two application hosts after the injection activity began.', label: 'Risk', value: 'Possible lateral movement', discoveryConcepts: ['lateral-movement', 'incident-scope'] },
+      { evidenceId: 'compromised-service-account', title: 'Inspect authentication logs', body: 'A service account used by the portal authenticated to internal systems from the compromised server.', label: 'Identity status', value: 'Credentials potentially compromised', discoveryConcepts: ['containment', 'incident-response'] },
+      { evidenceId: 'volatile-evidence', title: 'Inspect response readiness', body: 'Memory, active connections, process details, and centralized logs are still available for collection before destructive remediation.', label: 'Evidence', value: 'Volatile and persistent sources available', discoveryConcepts: ['evidence-preservation', 'eradication'] }
+    ],
+    activity: { type: 'configuration', prompt: 'What should the response team do first?', options: [
+      { id: 'isolate-disable-preserve', label: 'Isolate the server, disable the compromised service account, preserve evidence, and begin scope analysis', correct: true, explanation: 'Correct. This limits further access while preserving the information needed to understand and eradicate the incident.' },
+      { id: 'wipe-immediately', label: 'Immediately wipe the server before collecting evidence or checking connected systems', correct: false, explanation: 'Wiping may remove the visible host but can destroy evidence and leave attacker access elsewhere undiscovered.' },
+      { id: 'watch-only', label: 'Leave all access active until the complete investigation is finished', correct: false, explanation: 'Waiting for perfect certainty allows additional lateral movement and harm.' },
+      { id: 'block-public-only', label: 'Block only public HTTPS while leaving internal sessions and credentials unchanged', correct: false, explanation: 'Public blocking alone does not contain the internal connections or compromised identity.' }
+    ] },
+    activities: [
+      { type: 'configuration', prompt: 'What should the response team do first?', options: [
+        { id: 'isolate-disable-preserve', label: 'Isolate the server, disable the compromised service account, preserve evidence, and begin scope analysis', correct: true, explanation: 'Correct. This limits further access while preserving the information needed to understand and eradicate the incident.' },
+        { id: 'wipe-immediately', label: 'Immediately wipe the server before collecting evidence or checking connected systems', correct: false, explanation: 'Wiping may remove the visible host but can destroy evidence and leave attacker access elsewhere undiscovered.' },
+        { id: 'watch-only', label: 'Leave all access active until the complete investigation is finished', correct: false, explanation: 'Waiting for perfect certainty allows additional lateral movement and harm.' },
+        { id: 'block-public-only', label: 'Block only public HTTPS while leaving internal sessions and credentials unchanged', correct: false, explanation: 'Public blocking alone does not contain the internal connections or compromised identity.' }
+      ] },
+      { type: 'classification', prompt: 'Which evidence best expands the incident scope beyond the original web server?', options: [
+        { id: 'correlate-hosts-identities', label: 'Correlate destination hosts, service-account activity, timestamps, and centralized logs', correct: true, explanation: 'Correct. Correlation establishes which systems and identities were touched and when.' },
+        { id: 'server-name-only', label: 'Treat the web server hostname as the complete scope', correct: false, explanation: 'The observed internal connections and identity use show that scope may extend beyond the first host.' },
+        { id: 'alert-count-only', label: 'Use only the number of SIEM alerts as the affected-system count', correct: false, explanation: 'Alert volume does not directly define the systems, accounts, data, or time period affected.' }
+      ] },
+      { type: 'configuration', prompt: 'When should eradication begin?', options: [
+        { id: 'after-containment-scope', label: 'After adequate containment and scoping, remove persistence, rotate credentials, and remediate the exploited weakness', correct: true, explanation: 'Correct. Eradication should remove the attacker and root cause without overlooking connected compromise.' },
+        { id: 'before-evidence', label: 'Before preserving evidence or identifying affected accounts', correct: false, explanation: 'Premature destructive action can hide the scope and prevent a complete response.' },
+        { id: 'after-production-return', label: 'Only after the original server has returned to production', correct: false, explanation: 'Recovery before eradication risks returning attacker access to service.' }
+      ] }
+    ],
+    hint: 'Contain active access while preserving evidence, then use correlated data to establish scope before eradication.',
+    debrief: 'Effective incident response balances speed with evidence. Containment limits damage, scope identifies every affected system and identity, preservation supports reliable analysis, and eradication removes both attacker access and root cause.',
+    masteryEvidence: [
+      { conceptId: 'containment', evidenceType: 'application', contextId: 'web-server-containment', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 0 },
+      { conceptId: 'evidence-preservation', evidenceType: 'reasoning', contextId: 'web-server-containment', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 0 },
+      { conceptId: 'incident-scope', evidenceType: 'reasoning', contextId: 'lateral-movement-scope', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'lateral-movement', evidenceType: 'application', contextId: 'lateral-movement-scope', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'eradication', evidenceType: 'reasoning', contextId: 'post-containment-eradication', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 2 }
+    ],
+    rewards: { xp: 280, cyberDexEntries: ['incident-response', 'containment', 'incident-scope', 'evidence-preservation', 'lateral-movement', 'eradication'] }
+  },
+  {
+    missionId: 'splus-c1-m14',
+    title: 'The Backup Decision',
+    description: 'Choose a trustworthy recovery point and restore BrightPath within business requirements.',
+    objectives: ['Evaluate backup integrity', 'Balance RPO and RTO', 'Validate a clean restoration.'],
+    prerequisites: ['splus-c1-m13'],
+    concepts: ['backup-integrity', 'recovery-testing', 'rpo', 'rto', 'clean-restoration', 'eradication'],
+    briefing: 'Containment is holding, but BrightPath must restore its portal. The newest copy is not necessarily the safest one, and business leaders need an honest recovery estimate.',
+    investigations: [
+      { evidenceId: 'backup-catalog', title: 'Review recovery points', body: 'The newest backup was created after compromise and is untested. An older backup predates the intrusion and passed its last restoration test.', label: 'Candidates', value: 'Recent untested vs. older tested clean point', discoveryConcepts: ['backup-integrity', 'recovery-testing'] },
+      { evidenceId: 'business-objectives', title: 'Review business objectives', body: 'BrightPath accepts up to four hours of data loss and targets service restoration within eight hours.', label: 'Objectives', value: 'RPO 4 hours · RTO 8 hours', discoveryConcepts: ['rpo', 'rto'] },
+      { evidenceId: 'recovery-runbook', title: 'Review the recovery runbook', body: 'The clean environment must be patched, credentials rotated, data validated, security controls enabled, and monitoring confirmed before production traffic returns.', label: 'Release gate', value: 'Validated clean restoration', discoveryConcepts: ['clean-restoration', 'eradication'] }
+    ],
+    activity: { type: 'configuration', prompt: 'Which recovery source is the safest defensible choice?', options: [
+      { id: 'older-tested-clean', label: 'Use the older tested backup that predates compromise, then validate it in a clean environment', correct: true, explanation: 'Correct. It sacrifices some recent data within the stated RPO while providing stronger integrity and recoverability evidence.' },
+      { id: 'recent-untested', label: 'Use the newest untested backup because it contains the most recent data', correct: false, explanation: 'The newest copy may contain attacker changes and has not demonstrated recoverability.' },
+      { id: 'post-compromise-snapshot', label: 'Use the snapshot taken after compromise because it restores fastest', correct: false, explanation: 'A post-compromise snapshot can restore malicious artifacts, persistence, and unsafe configuration.' },
+      { id: 'infected-production', label: 'Return the still-infected production server to service', correct: false, explanation: 'Speed does not make an untrusted system a clean recovery source.' }
+    ] },
+    activities: [
+      { type: 'configuration', prompt: 'Which recovery source is the safest defensible choice?', options: [
+        { id: 'older-tested-clean', label: 'Use the older tested backup that predates compromise, then validate it in a clean environment', correct: true, explanation: 'Correct. It sacrifices some recent data within the stated RPO while providing stronger integrity and recoverability evidence.' },
+        { id: 'recent-untested', label: 'Use the newest untested backup because it contains the most recent data', correct: false, explanation: 'The newest copy may contain attacker changes and has not demonstrated recoverability.' },
+        { id: 'post-compromise-snapshot', label: 'Use the snapshot taken after compromise because it restores fastest', correct: false, explanation: 'A post-compromise snapshot can restore malicious artifacts, persistence, and unsafe configuration.' },
+        { id: 'infected-production', label: 'Return the still-infected production server to service', correct: false, explanation: 'Speed does not make an untrusted system a clean recovery source.' }
+      ] },
+      { type: 'classification', prompt: 'What do the four-hour RPO and eight-hour RTO mean?', options: [
+        { id: 'rpo-data-rto-time', label: 'Up to four hours of data loss is acceptable, and service should return within eight hours', correct: true, explanation: 'Correct. RPO targets the recovery point and acceptable data loss; RTO targets restoration time.' },
+        { id: 'reverse-objectives', label: 'Service must return in four hours, and eight hours of data loss is acceptable', correct: false, explanation: 'That reverses the meanings of RPO and RTO.' },
+        { id: 'guaranteed-times', label: 'Both values guarantee that recovery will succeed automatically', correct: false, explanation: 'Objectives guide planning and priority; testing and execution determine actual recovery.' }
+      ] },
+      { type: 'configuration', prompt: 'What must happen before production traffic returns?', options: [
+        { id: 'validate-harden-monitor', label: 'Validate data and applications, patch the root cause, rotate credentials, enable controls, and monitor the clean environment', correct: true, explanation: 'Correct. Clean restoration requires both functional testing and evidence that the compromise will not return.' },
+        { id: 'loads-homepage', label: 'Return service as soon as the homepage loads', correct: false, explanation: 'A visible page does not prove data integrity, security controls, dependencies, or attacker removal.' },
+        { id: 'disable-monitoring', label: 'Disable monitoring to improve restoration performance', correct: false, explanation: 'Recovery needs heightened monitoring to detect recurrence and validate normal operation.' }
+      ] }
+    ],
+    hint: 'Prefer a tested point before compromise, distinguish acceptable data loss from recovery time, and validate security before release.',
+    debrief: 'Recovery is a risk decision, not simply a race toward the newest copy. Backup integrity and testing establish trust, RPO and RTO guide tradeoffs, and clean restoration combines validation, remediation, credential security, and monitoring.',
+    masteryEvidence: [
+      { conceptId: 'backup-integrity', evidenceType: 'reasoning', contextId: 'clean-backup-selection', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 0 },
+      { conceptId: 'recovery-testing', evidenceType: 'application', contextId: 'clean-backup-selection', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 0 },
+      { conceptId: 'rpo', evidenceType: 'application', contextId: 'recovery-objectives', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'rto', evidenceType: 'application', contextId: 'recovery-objectives', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'clean-restoration', evidenceType: 'reasoning', contextId: 'validated-production-return', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 2 }
+    ],
+    rewards: { xp: 300, cyberDexEntries: ['backup-integrity', 'recovery-testing', 'rpo', 'rto', 'clean-restoration', 'eradication'] }
+  },
+  {
+    missionId: 'splus-c1-m15',
+    title: 'Incident Commander',
+    description: 'Lead a complete Public Web District incident from initial evidence through recovery and reporting.',
+    objectives: ['Correlate evidence across security domains', 'Prioritize containment and remediation', 'Authorize a clean, documented recovery.'],
+    prerequisites: ['splus-c1-m14'],
+    concepts: ['incident-response', 'analyst-prioritization', 'phishing', 'authentication-logs', 'certificate', 'sql-injection', 'containment', 'clean-restoration', 'incident-reporting'],
+    briefing: 'A coordinated attack combines phishing, stolen credentials, certificate misuse, web injection, and lateral movement. As incident commander, you must lead the response from evidence to recovery.',
+    investigations: [
+      { evidenceId: 'capstone-timeline', title: 'Build the incident timeline', body: 'A cloned login page captured credentials before a suspicious account session changed the portal certificate and application configuration.', label: 'Sequence', value: 'Phishing → account access → service changes', discoveryConcepts: ['phishing', 'authentication-logs', 'incident-response'] },
+      { evidenceId: 'capstone-web-evidence', title: 'Inspect application evidence', body: 'Logs show SQL injection against unsafe query construction followed by outbound connections and internal administrative traffic.', label: 'Web evidence', value: 'Injection with possible lateral movement', discoveryConcepts: ['sql-injection', 'lateral-movement', 'incident-scope'] },
+      { evidenceId: 'capstone-trust-evidence', title: 'Inspect identity and trust', body: 'The attacker used a stolen account, active sessions, and a replaced certificate chain that does not terminate at the approved root.', label: 'Trust status', value: 'Identity and certificate trust compromised', discoveryConcepts: ['certificate', 'containment', 'evidence-preservation'] },
+      { evidenceId: 'capstone-recovery-evidence', title: 'Inspect recovery readiness', body: 'A tested clean backup predates compromise. The rebuilt environment can be patched, validated, monitored, and restored within the approved objectives.', label: 'Recovery status', value: 'Clean restoration candidate ready', discoveryConcepts: ['backup-integrity', 'clean-restoration', 'recovery-testing'] }
+    ],
+    activity: { type: 'classification', prompt: 'Which evidence best explains the likely initial access?', options: [
+      { id: 'phish-credentials', label: 'The cloned login page and subsequent suspicious use of captured credentials', correct: true, explanation: 'Correct. The timeline connects phishing and credential harvesting to the first unauthorized identity activity.' },
+      { id: 'expired-backup', label: 'The age of the clean backup', correct: false, explanation: 'Backup age affects recovery, not the initial-access evidence.' },
+      { id: 'alert-count', label: 'The total number of SIEM alerts without context', correct: false, explanation: 'Alert count alone does not establish the attack path.' }
+    ] },
+    activities: [
+      { type: 'classification', prompt: 'Which evidence best explains the likely initial access?', options: [
+        { id: 'phish-credentials', label: 'The cloned login page and subsequent suspicious use of captured credentials', correct: true, explanation: 'Correct. The timeline connects phishing and credential harvesting to the first unauthorized identity activity.' },
+        { id: 'expired-backup', label: 'The age of the clean backup', correct: false, explanation: 'Backup age affects recovery, not the initial-access evidence.' },
+        { id: 'alert-count', label: 'The total number of SIEM alerts without context', correct: false, explanation: 'Alert count alone does not establish the attack path.' }
+      ] },
+      { type: 'configuration', prompt: 'What is the strongest immediate containment order?', options: [
+        { id: 'isolate-revoke-preserve', label: 'Isolate affected systems, disable compromised identities and sessions, preserve evidence, and restrict lateral paths', correct: true, explanation: 'Correct. This contains host, identity, and network access while protecting the investigation.' },
+        { id: 'public-banner', label: 'Post a maintenance banner but leave systems and sessions active', correct: false, explanation: 'A banner communicates downtime but does not contain attacker access.' },
+        { id: 'wipe-all', label: 'Wipe every suspected system immediately without scoping or evidence preservation', correct: false, explanation: 'Uncoordinated destruction can hide scope and still miss compromised identities or systems.' }
+      ] },
+      { type: 'configuration', prompt: 'Which remediation plan addresses the root causes?', options: [
+        { id: 'fix-query-trust-identity', label: 'Parameterize queries, patch systems, rotate credentials, revoke untrusted certificates, and verify the approved trust chain', correct: true, explanation: 'Correct. The plan repairs application, system, identity, and certificate trust rather than treating only symptoms.' },
+        { id: 'waf-password-only', label: 'Add one WAF rule and change one user password', correct: false, explanation: 'That leaves unsafe code, other sessions, certificate trust, and wider compromise unresolved.' },
+        { id: 'ignore-certificate', label: 'Restore the portal while ignoring the unapproved certificate chain', correct: false, explanation: 'Recovery cannot be trusted while service identity remains compromised.' }
+      ] },
+      { type: 'configuration', prompt: 'When should the commander authorize production recovery?', options: [
+        { id: 'clean-validated-monitored', label: 'After clean restoration is tested, root causes are remediated, credentials and trust are restored, and monitoring is active', correct: true, explanation: 'Correct. Functional and security validation must both pass before production return.' },
+        { id: 'homepage-only', label: 'As soon as any restored homepage responds', correct: false, explanation: 'A responding page does not prove clean data, secure identity, fixed code, or attacker removal.' },
+        { id: 'infected-fastest', label: 'Use the infected production server because it has the shortest downtime', correct: false, explanation: 'An untrusted system cannot support a safe recovery regardless of speed.' }
+      ] },
+      { type: 'classification', prompt: 'What completes the incident commander’s responsibility after recovery?', options: [
+        { id: 'report-lessons-monitor', label: 'Document scope and decisions, notify required stakeholders, monitor for recurrence, and conduct lessons learned', correct: true, explanation: 'Correct. Reporting, monitoring, and lessons learned complete the response and improve future resilience.' },
+        { id: 'delete-records', label: 'Delete incident records once service returns', correct: false, explanation: 'Records support accountability, improvement, compliance, and defensible analysis.' },
+        { id: 'no-review', label: 'Skip review because the service is operational', correct: false, explanation: 'Operational recovery does not replace reporting or lessons learned.' }
+      ] }
+    ],
+    hint: 'Follow the incident lifecycle: establish the attack path, contain access, remediate every trust boundary, validate recovery, and document the outcome.',
+    debrief: 'You led a complete response across network, identity, cryptography, application, detection, containment, recovery, and reporting. Strong incident command connects evidence to prioritized decisions and restores service only when it is both functional and trustworthy.',
+    masteryEvidence: [
+      { conceptId: 'phishing', evidenceType: 'assessment', contextId: 'district-capstone-initial-access', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 0 },
+      { conceptId: 'analyst-prioritization', evidenceType: 'assessment', contextId: 'district-capstone-containment', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'containment', evidenceType: 'assessment', contextId: 'district-capstone-containment', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 1 },
+      { conceptId: 'sql-injection', evidenceType: 'assessment', contextId: 'district-capstone-remediation', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 2 },
+      { conceptId: 'certificate', evidenceType: 'assessment', contextId: 'district-capstone-remediation', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 2 },
+      { conceptId: 'clean-restoration', evidenceType: 'assessment', contextId: 'district-capstone-recovery', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 3 },
+      { conceptId: 'incident-response', evidenceType: 'assessment', contextId: 'district-capstone-reporting', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 4 },
+      { conceptId: 'incident-reporting', evidenceType: 'assessment', contextId: 'district-capstone-reporting', firstAttemptRequired: true, hintDisqualifies: true, independent: true, activityIndex: 4 }
+    ],
+    rewards: { xp: 500, cyberDexEntries: ['incident-response', 'analyst-prioritization', 'phishing', 'authentication-logs', 'certificate', 'sql-injection', 'containment', 'clean-restoration', 'incident-reporting'] }
   }
 ]

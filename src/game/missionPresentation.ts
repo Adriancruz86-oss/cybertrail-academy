@@ -20,7 +20,7 @@ const brightPathPresentation: MissionPresentation = {
 }
 
 export function getMissionPresentation(missionId: string): MissionPresentation {
-  return missionId === 'splus-c1-m01' ? cwssPresentation : brightPathPresentation
+  return ['splus-c1-m01', 'splus-c1-m15'].includes(missionId) ? cwssPresentation : brightPathPresentation
 }
 
 export function getObjectiveBeaconLabel(activeMissionId: string | null, completedMissionCount: number) {

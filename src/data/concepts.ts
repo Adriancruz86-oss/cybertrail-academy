@@ -379,5 +379,60 @@ export const concepts: Record<string, ConceptRecord> = {
     conceptId: 'analyst-prioritization', name: 'Analyst prioritization', fullName: 'Security alert prioritization', domain: 'security-operations',
     plainDefinition: 'Ordering investigations by credible risk and impact.', technicalDefinition: 'Risk-based triage using severity, confidence, asset value, exposure, and available context.',
     whyItExists: 'To use limited analyst attention where it reduces the most risk.', relatedConcepts: ['alert-quality', 'detection-risk', 'security-context'], commonMisconceptions: ['The newest alert should always be investigated first.']
+  },
+  'incident-response': {
+    conceptId: 'incident-response', name: 'Incident response', fullName: 'Security incident response process', domain: 'security-operations',
+    plainDefinition: 'A coordinated process for handling and recovering from security incidents.', technicalDefinition: 'Preparation, detection, analysis, containment, eradication, recovery, and lessons-learned activities used to manage security incidents.',
+    whyItExists: 'To reduce harm while preserving evidence and restoring trustworthy operations.', relatedConcepts: ['containment', 'evidence-preservation', 'eradication'], commonMisconceptions: ['Incident response begins only after every fact is known.']
+  },
+  containment: {
+    conceptId: 'containment', name: 'Containment', fullName: 'Incident containment', domain: 'security-operations',
+    plainDefinition: 'Limiting an incident so it cannot cause more harm.', technicalDefinition: 'Short- and long-term controls that restrict attacker access, affected systems, and propagation while investigation continues.',
+    whyItExists: 'To stop additional damage without destroying evidence needed for response.', relatedConcepts: ['incident-response', 'lateral-movement', 'evidence-preservation'], commonMisconceptions: ['Immediately wiping every affected system is always the best containment step.']
+  },
+  'incident-scope': {
+    conceptId: 'incident-scope', name: 'Incident scope', fullName: 'Incident impact and scope', domain: 'security-operations',
+    plainDefinition: 'The systems, accounts, data, and time period affected by an incident.', technicalDefinition: 'The established boundaries and impact of compromise derived from evidence across identities, endpoints, networks, applications, and data.',
+    whyItExists: 'To ensure containment and recovery address the complete incident.', relatedConcepts: ['security-logging', 'lateral-movement', 'incident-response'], commonMisconceptions: ['The first compromised device defines the entire incident scope.']
+  },
+  'evidence-preservation': {
+    conceptId: 'evidence-preservation', name: 'Evidence preservation', fullName: 'Digital evidence preservation', domain: 'security-operations',
+    plainDefinition: 'Protecting useful incident data from loss or alteration.', technicalDefinition: 'Collecting and maintaining volatile and persistent evidence with integrity, documentation, and appropriate handling.',
+    whyItExists: 'To support investigation, legal needs, lessons learned, and defensible decisions.', relatedConcepts: ['incident-response', 'security-logging', 'containment'], commonMisconceptions: ['Restoring service is always more important than preserving any evidence.']
+  },
+  'lateral-movement': {
+    conceptId: 'lateral-movement', name: 'Lateral movement', fullName: 'Attacker lateral movement', domain: 'threats-vulnerabilities-mitigations',
+    plainDefinition: 'An attacker moving from one internal system or account to another.', technicalDefinition: 'Techniques used after initial access to traverse identities, hosts, services, and trust relationships within an environment.',
+    whyItExists: 'To expand access and reach higher-value systems after compromise.', relatedConcepts: ['containment', 'incident-scope', 'account-compromise'], commonMisconceptions: ['An isolated public server cannot be a path toward internal systems.']
+  },
+  eradication: {
+    conceptId: 'eradication', name: 'Eradication', fullName: 'Incident threat eradication', domain: 'security-operations',
+    plainDefinition: 'Removing the attacker, malicious artifacts, and root cause.', technicalDefinition: 'Eliminating persistence, malicious code, compromised credentials, and exploited weaknesses after adequate containment and scoping.',
+    whyItExists: 'To prevent the incident from returning during recovery.', relatedConcepts: ['containment', 'clean-restoration', 'incident-response'], commonMisconceptions: ['Restoring a backup automatically removes every persistence mechanism.']
+  },
+  'backup-integrity': {
+    conceptId: 'backup-integrity', name: 'Backup integrity', fullName: 'Backup integrity and trustworthiness', domain: 'security-operations',
+    plainDefinition: 'Confidence that backup data is complete, unaltered, and safe to restore.', technicalDefinition: 'Validation that backup contents, metadata, access controls, and recovery chain remain authentic and free from compromise.',
+    whyItExists: 'To avoid restoring corrupted, incomplete, or attacker-controlled data.', relatedConcepts: ['recovery-testing', 'clean-restoration', 'rpo'], commonMisconceptions: ['The newest backup is automatically the safest backup.']
+  },
+  'recovery-testing': {
+    conceptId: 'recovery-testing', name: 'Recovery testing', fullName: 'Backup restoration testing', domain: 'security-operations',
+    plainDefinition: 'Proving that a backup can restore a working, trustworthy service.', technicalDefinition: 'Controlled validation of restoration procedures, data usability, dependencies, security state, and recovery objectives.',
+    whyItExists: 'To turn a stored backup into a dependable recovery capability.', relatedConcepts: ['backup-integrity', 'rto', 'clean-restoration'], commonMisconceptions: ['A successful backup job proves restoration will work.']
+  },
+  rpo: {
+    conceptId: 'rpo', name: 'RPO', fullName: 'Recovery Point Objective', domain: 'security-operations',
+    plainDefinition: 'The maximum acceptable amount of recent data loss.', technicalDefinition: 'The target point in time to which data must be restored after a disruption.',
+    whyItExists: 'To guide backup frequency and recovery-point decisions.', relatedConcepts: ['rto', 'backup-integrity', 'clean-restoration'], commonMisconceptions: ['RPO describes how quickly the service must return.']
+  },
+  rto: {
+    conceptId: 'rto', name: 'RTO', fullName: 'Recovery Time Objective', domain: 'security-operations',
+    plainDefinition: 'The target time for restoring an acceptable service.', technicalDefinition: 'The maximum targeted duration between disruption and restoration of a business process or service.',
+    whyItExists: 'To guide recovery priority, resources, and acceptable downtime.', relatedConcepts: ['rpo', 'recovery-testing', 'clean-restoration'], commonMisconceptions: ['RTO measures acceptable data loss.']
+  },
+  'clean-restoration': {
+    conceptId: 'clean-restoration', name: 'Clean restoration', fullName: 'Validated clean service restoration', domain: 'security-operations',
+    plainDefinition: 'Restoring service from a trusted point without bringing the compromise back.', technicalDefinition: 'Recovery using validated data, rebuilt or trusted systems, remediated weaknesses, rotated credentials, and monitored reintroduction to production.',
+    whyItExists: 'To return operations without re-establishing attacker access.', relatedConcepts: ['backup-integrity', 'eradication', 'recovery-testing'], commonMisconceptions: ['Returning the original infected server to production is the fastest safe recovery.']
   }
 }

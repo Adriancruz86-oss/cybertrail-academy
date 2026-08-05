@@ -112,7 +112,7 @@ export class HubScene extends Phaser.Scene {
     const activeMission = ProgressionService.getNextMission(saveState)
 
     if (activeMission) {
-      const target = activeMission.missionId === 'splus-c1-m01' ? this.mayaZone : this.brightPathZone
+      const target = ['splus-c1-m01', 'splus-c1-m15'].includes(activeMission.missionId) ? this.mayaZone : this.brightPathZone
       const beaconLabel = getObjectiveBeaconLabel(saveState.activeMission?.missionId ?? null, saveState.completedMissions.length)
       this.createObjectiveBeacon(target.x, target.y - 82, saveState.settings.reducedMotion, beaconLabel)
     }
@@ -123,9 +123,9 @@ export class HubScene extends Phaser.Scene {
       this.scene.start('MissionScene', { missionId })
     })
     GameUI.get().updateCyberDex(ContentService.getAllConcepts(), saveState.conceptProgress)
-    GameUI.get().updateCompetencyMatrix(ContentService.getAllConcepts(), saveState.conceptProgress)
+    GameUI.get().updateCompetencyMatrix(ContentService.getAllConcepts(), saveState.conceptProgress, saveState)
     if (activeMission) {
-      const destination = activeMission.missionId === 'splus-c1-m01' ? 'CWSS Headquarters' : 'BrightPath'
+      const destination = ['splus-c1-m01', 'splus-c1-m15'].includes(activeMission.missionId) ? 'CWSS Headquarters' : 'BrightPath'
       GameUI.get().showNotification(`Next: ${activeMission.title}. Enter ${destination}.`)
     }
   }
@@ -231,9 +231,12 @@ export class HubScene extends Phaser.Scene {
   private handleInteract(target: 'maya' | 'brightpath') {
     const saveState = SaveService.get()
     const mission1Complete = saveState.completedMissions.includes('splus-c1-m01')
+    const nextMission = ProgressionService.getNextMission(saveState)
 
     if (target === 'maya') {
-      if (mission1Complete) {
+      if (nextMission?.missionId === 'splus-c1-m15') {
+        this.scene.start('MissionScene', { missionId: nextMission.missionId })
+      } else if (mission1Complete) {
         GameUI.get().showNotification('The SOC introduction is complete. Continue through BrightPath.')
       } else {
         this.scene.start('MissionScene', { missionId: 'splus-c1-m01' })
@@ -246,9 +249,9 @@ export class HubScene extends Phaser.Scene {
       return
     }
 
-    const nextMission = ProgressionService.getNextMission(saveState)
     if (nextMission) {
-      this.scene.start('MissionScene', { missionId: nextMission.missionId })
+      if (nextMission.missionId === 'splus-c1-m15') GameUI.get().showNotification('Report to CWSS Headquarters for the Incident Commander assessment.')
+      else this.scene.start('MissionScene', { missionId: nextMission.missionId })
     } else {
       GameUI.get().showNotification('No unlocked mission available yet.')
     }

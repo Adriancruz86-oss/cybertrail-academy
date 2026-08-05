@@ -1,6 +1,6 @@
 import type { MissionData, ConceptRecord, SaveState, MissionActivity, MissionActivityOption } from '../types'
 import { SaveService } from '../services/saveService'
-import { getCurrentChapter, getMissionNavigatorStatus } from '../game/missionChapters'
+import { getAchievements, getCampaignCompletion, getCurrentChapter, getMissionNavigatorStatus, missionChapters } from '../game/missionChapters'
 
 type ScreenName = 'mission' | 'cyberdex' | 'progress' | 'settings'
 
@@ -162,18 +162,22 @@ export class GameUI {
     decisions: number
     correct: number
     xp: number
+    campaignComplete?: boolean
     onReturn: () => void
   }) {
-    ;(this.resultsOverlay.querySelector('#results-title') as HTMLElement).textContent = args.title
+    ;(this.resultsOverlay.querySelector('.results-kicker') as HTMLElement).textContent = args.campaignComplete ? 'Campaign complete' : 'Mission complete'
+    ;(this.resultsOverlay.querySelector('#results-title') as HTMLElement).textContent = args.campaignComplete ? 'Public Web District secured' : args.title
     const summary = this.resultsOverlay.querySelector('.results-summary') as HTMLElement
     const list = (items: string[], empty: string) => items.length ? items.map((item) => `<li>${item}</li>`).join('') : `<li>${empty}</li>`
     summary.innerHTML = `
-      <div class="results-stats"><strong>${args.correct}/${args.decisions}</strong><span>correct decisions</span><strong>+${args.xp}</strong><span>mission XP</span></div>
+      ${args.campaignComplete ? '<div class="campaign-congratulations"><strong>First Response complete</strong><span>You finished all 15 missions and the district assessment.</span></div>' : ''}
+      <div class="results-stats"><strong>${args.correct}/${args.decisions}</strong><span>correct decisions</span><strong>+${args.xp}</strong><span>mission XP value</span></div>
       <section><h2>Evidence collected</h2><ul>${list(args.evidence, 'No evidence recorded')}</ul></section>
       <section><h2>CyberDex discoveries</h2><ul>${list(args.discoveries, 'No new discoveries')}</ul></section>
       <section><h2>Mastery evidence</h2><ul>${list(args.mastery, 'No qualifying mastery evidence')}</ul></section>
     `
     const button = this.resultsOverlay.querySelector('.results-return') as HTMLButtonElement
+    button.textContent = args.campaignComplete ? 'Return to campus and view progress' : 'Return to campus'
     button.onclick = args.onReturn
     this.resultsOverlay.setAttribute('aria-hidden', 'false')
     this.resultsOverlay.classList.add('visible')
@@ -239,11 +243,16 @@ export class GameUI {
     }).join('')}</div>` : '<div class="empty-state"><h2>No discoveries yet</h2><p>Investigate mission evidence to build your CyberDex.</p></div>'
   }
 
-  updateCompetencyMatrix(concepts: Record<string, ConceptRecord>, progress: SaveState['conceptProgress']) {
+  updateCompetencyMatrix(concepts: Record<string, ConceptRecord>, progress: SaveState['conceptProgress'], state: SaveState) {
     const entries = Object.values(concepts).filter((concept) => Boolean(progress[concept.conceptId] && progress[concept.conceptId].status !== 'unknown'))
     const competent = entries.filter((concept) => ['competent', 'mastered'].includes(progress[concept.conceptId]?.status)).length
+    const campaign = getCampaignCompletion(state)
+    const achievements = getAchievements(state)
+    const currentChapterIndex = missionChapters.indexOf(getCurrentChapter(state))
     this.competencyPanel.innerHTML = `
-      <div class="progress-summary"><span>Campaign knowledge</span><strong>${competent} competencies</strong><p>${entries.length} concepts encountered</p></div>
+      <div class="progress-summary"><span>First Response campaign</span><strong>${campaign.percent}% complete</strong><p>${campaign.completed} of ${campaign.total} missions · ${competent} competencies · ${entries.length} concepts encountered</p><div class="campaign-progress"><i style="width:${campaign.percent}%"></i></div></div>
+      <section class="achievement-section"><h2>Achievements</h2>${achievements.length ? `<div class="achievement-grid">${achievements.map((achievement) => `<article><span>◆</span><div><strong>${achievement.title}</strong><p>${achievement.description}</p></div></article>`).join('')}</div>` : '<p>Complete your first mission to earn an achievement.</p>'}</section>
+      <section class="chapter-progress"><h2>Chapter progress</h2>${missionChapters.slice(0, currentChapterIndex + 1).map((chapter) => { const complete = chapter.missionIds.filter((id) => state.completedMissions.includes(id)).length; return `<div><strong>${chapter.title}</strong><span>${complete}/${chapter.missionIds.length}</span></div>` }).join('')}</section>
       ${entries.length ? `<div class="competency-grid">${entries.map((concept) => {
         const status = progress[concept.conceptId]?.status ?? 'unknown'
         return `<article class="competency-tile competency-${status}"><div><strong>${concept.name}</strong><small>${concept.domain.replace(/-/g, ' ')}</small></div><span>${status}</span></article>`

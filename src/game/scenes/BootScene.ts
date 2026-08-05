@@ -99,7 +99,7 @@ export class BootScene extends Phaser.Scene {
       this.scene.start('MissionScene', { missionId })
     })
     ui.updateCyberDex(ContentService.getAllConcepts(), state.conceptProgress)
-    ui.updateCompetencyMatrix(ContentService.getAllConcepts(), state.conceptProgress)
+    ui.updateCompetencyMatrix(ContentService.getAllConcepts(), state.conceptProgress, state)
     ui.showNotification('Enter the campus when you are ready for your assignment.')
   }
 }

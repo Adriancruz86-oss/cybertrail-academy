@@ -186,6 +186,7 @@ export class MissionScene extends Phaser.Scene {
       decisions: session.decisions.length,
       correct: session.decisions.filter((item) => item.correct).length,
       xp: mission.rewards.xp,
+      campaignComplete: mission.missionId === 'splus-c1-m15',
       onReturn: () => {
         GameUI.get().hideMissionResults()
         SaveService.update((state) => { state.activeMission = null })
@@ -243,6 +244,6 @@ export class MissionScene extends Phaser.Scene {
       this.scene.start('MissionScene', { missionId })
     })
     GameUI.get().updateCyberDex(ContentService.getAllConcepts(), state.conceptProgress)
-    GameUI.get().updateCompetencyMatrix(ContentService.getAllConcepts(), state.conceptProgress)
+    GameUI.get().updateCompetencyMatrix(ContentService.getAllConcepts(), state.conceptProgress, state)
   }
 }

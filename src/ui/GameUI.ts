@@ -1,6 +1,8 @@
 import type { MissionData, ConceptRecord, SaveState } from '../types'
 import { SaveService } from '../services/saveService'
 
+type ScreenName = 'mission' | 'cyberdex' | 'progress' | 'settings'
+
 export class GameUI {
   private static instance: GameUI | null = null
   private root: HTMLElement
@@ -8,20 +10,38 @@ export class GameUI {
   private missionPanel: HTMLElement
   private cyberdexPanel: HTMLElement
   private competencyPanel: HTMLElement
+  private settingsPanel: HTMLElement
+  private overlay: HTMLElement
+  private overlayTitle: HTMLElement
   private notificationPanel: HTMLElement
 
   private constructor() {
     this.root = document.createElement('div')
     this.root.id = 'game-ui'
     this.root.innerHTML = `
-      <section class="status-panel" aria-live="polite"></section>
-      <section class="mission-panel"></section>
-      <section class="sidebar-panel">
-        <div class="panel-header">CyberDex</div>
-        <div class="cyberdex-content"></div>
-        <div class="panel-header">Competency Matrix</div>
-        <div class="competency-content"></div>
-      </section>
+      <header class="game-hud">
+        <div class="status-panel" aria-live="polite"></div>
+        <nav class="game-nav" aria-label="Game menu">
+          <button data-screen="mission">Mission</button>
+          <button data-screen="cyberdex">CyberDex</button>
+          <button data-screen="progress">Progress</button>
+          <button data-screen="settings">Settings</button>
+        </nav>
+      </header>
+      <div class="screen-overlay" aria-hidden="true">
+        <section class="screen-dialog" role="dialog" aria-modal="true" aria-labelledby="screen-title">
+          <header class="screen-header">
+            <h1 id="screen-title">Mission</h1>
+            <button class="screen-close" aria-label="Return to game">×</button>
+          </header>
+          <div class="screen-body">
+            <section class="mission-panel screen-content" data-content="mission"></section>
+            <section class="cyberdex-content screen-content" data-content="cyberdex"></section>
+            <section class="competency-content screen-content" data-content="progress"></section>
+            <section class="settings-content screen-content" data-content="settings"></section>
+          </div>
+        </section>
+      </div>
       <div class="notification-panel" aria-live="assertive"></div>
     `
     document.body.appendChild(this.root)
@@ -29,110 +49,104 @@ export class GameUI {
     this.missionPanel = this.root.querySelector('.mission-panel') as HTMLElement
     this.cyberdexPanel = this.root.querySelector('.cyberdex-content') as HTMLElement
     this.competencyPanel = this.root.querySelector('.competency-content') as HTMLElement
+    this.settingsPanel = this.root.querySelector('.settings-content') as HTMLElement
+    this.overlay = this.root.querySelector('.screen-overlay') as HTMLElement
+    this.overlayTitle = this.root.querySelector('#screen-title') as HTMLElement
     this.notificationPanel = this.root.querySelector('.notification-panel') as HTMLElement
+
+    this.root.querySelectorAll<HTMLButtonElement>('[data-screen]').forEach((button) => {
+      button.addEventListener('click', () => this.openScreen(button.dataset.screen as ScreenName))
+    })
+    this.root.querySelector('.screen-close')?.addEventListener('click', () => this.closeScreen())
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') this.closeScreen() })
   }
 
   static init(): GameUI {
-    if (!GameUI.instance) {
-      GameUI.instance = new GameUI()
-    }
+    if (!GameUI.instance) GameUI.instance = new GameUI()
     return GameUI.instance
   }
 
-  static get(): GameUI {
-    return GameUI.init()
+  static get(): GameUI { return GameUI.init() }
+
+  openScreen(screen: ScreenName) {
+    const titles: Record<ScreenName, string> = {
+      mission: 'Mission', cyberdex: 'CyberDex', progress: 'Competency & Achievements', settings: 'Settings'
+    }
+    this.overlayTitle.textContent = titles[screen]
+    this.root.querySelectorAll<HTMLElement>('.screen-content').forEach((content) => {
+      content.classList.toggle('active', content.dataset.content === screen)
+    })
+    this.overlay.setAttribute('aria-hidden', 'false')
+    this.overlay.classList.add('visible')
+    ;(this.root.querySelector('.screen-close') as HTMLButtonElement).focus()
+  }
+
+  closeScreen() {
+    this.overlay.setAttribute('aria-hidden', 'true')
+    this.overlay.classList.remove('visible')
   }
 
   updateStatus(state: SaveState) {
     document.documentElement.dataset.textSize = state.settings.textSize
     document.documentElement.dataset.reducedMotion = String(state.settings.reducedMotion)
-    this.statusPanel.innerHTML = `
-      <div class="status-card"><strong>Analyst:</strong> ${state.displayName}</div>
-      <div class="status-card"><strong>Rank:</strong> ${state.rank.replace(/-/g, ' ')}</div>
-      <div class="status-card"><strong>XP:</strong> ${state.xp}</div>
-      <button class="setting-button" data-setting="text">${state.settings.textSize === 'large' ? 'Standard text' : 'Large text'}</button>
-      <button class="setting-button" data-setting="motion">${state.settings.reducedMotion ? 'Enable motion' : 'Reduce motion'}</button>
+    this.statusPanel.innerHTML = `<strong>${state.displayName}</strong><span>${state.rank.replace(/-/g, ' ')}</span><span>${state.xp} XP</span>`
+    this.settingsPanel.innerHTML = `
+      <div class="settings-grid">
+        <article><h2>Readability</h2><p>Adjust interface text throughout the game.</p><button data-setting="text">${state.settings.textSize === 'large' ? 'Use standard text' : 'Use large text'}</button></article>
+        <article><h2>Motion</h2><p>Reduce nonessential transitions and animation.</p><button data-setting="motion">${state.settings.reducedMotion ? 'Enable motion' : 'Reduce motion'}</button></article>
+        <article class="danger-zone"><h2>Reset progress</h2><p>Erase missions, XP, CyberDex, and competency progress on this device.</p><button data-setting="reset">Reset progress</button></article>
+      </div>
     `
-    this.statusPanel.querySelector('[data-setting="text"]')?.addEventListener('click', () => {
-      const updated = SaveService.update((save) => {
-        save.settings.textSize = save.settings.textSize === 'large' ? 'standard' : 'large'
-      })
-      this.updateStatus(updated)
+    this.settingsPanel.querySelector('[data-setting="text"]')?.addEventListener('click', () => {
+      this.updateStatus(SaveService.update((save) => { save.settings.textSize = save.settings.textSize === 'large' ? 'standard' : 'large' }))
     })
-    this.statusPanel.querySelector('[data-setting="motion"]')?.addEventListener('click', () => {
-      const updated = SaveService.update((save) => {
-        save.settings.reducedMotion = !save.settings.reducedMotion
-      })
-      this.updateStatus(updated)
+    this.settingsPanel.querySelector('[data-setting="motion"]')?.addEventListener('click', () => {
+      this.updateStatus(SaveService.update((save) => { save.settings.reducedMotion = !save.settings.reducedMotion }))
+    })
+    this.settingsPanel.querySelector('[data-setting="reset"]')?.addEventListener('click', () => {
+      if (window.confirm('Reset all mission, mastery, CyberDex, and XP progress? This cannot be undone.')) {
+        SaveService.reset()
+        window.location.reload()
+      }
     })
   }
 
   updateMissionLog(mission?: MissionData, collectedEvidence: string[] = []) {
     if (!mission) {
-      this.missionPanel.innerHTML = `
-        <div class="panel-header">Mission log</div>
-        <p>No active mission selected.</p>
-      `
+      this.missionPanel.innerHTML = '<div class="empty-state"><h2>All available missions complete</h2><p>Explore the campus or review your progress.</p></div>'
       return
     }
-
     this.missionPanel.innerHTML = `
-      <div class="panel-header">Mission log</div>
-      <h2>${mission.title}</h2>
-      <p>${mission.description}</p>
-      <div class="mission-objectives">
-        ${mission.objectives.map((objective) => `<div class="objective">• ${objective}</div>`).join('')}
-      </div>
-      ${collectedEvidence.length ? `<div class="evidence-list"><strong>Evidence:</strong> ${collectedEvidence.map((id) => mission.investigations.find((item) => item.evidenceId === id)?.title ?? id).join(', ')}</div>` : ''}
+      <div class="mission-hero"><span>Current assignment</span><h2>${mission.title}</h2><p>${mission.description}</p></div>
+      <div class="mission-objectives"><h3>Objectives</h3>${mission.objectives.map((objective) => `<div class="objective"><span>◆</span>${objective}</div>`).join('')}</div>
+      <div class="evidence-list"><h3>Evidence collected</h3>${collectedEvidence.length ? collectedEvidence.map((id) => `<div>${mission.investigations.find((item) => item.evidenceId === id)?.title ?? id}</div>`).join('') : '<p>No evidence collected yet.</p>'}</div>
     `
   }
 
   updateCyberDex(concepts: Record<string, ConceptRecord>, progress: SaveState['conceptProgress']) {
-    const entries = Object.values(concepts)
-      .filter((concept) => Boolean(progress[concept.conceptId] && progress[concept.conceptId].status !== 'unknown'))
-
-    if (entries.length === 0) {
-      this.cyberdexPanel.innerHTML = '<p class="empty-state">No concepts discovered yet.</p>'
-      return
-    }
-
-    this.cyberdexPanel.innerHTML = entries
-      .map((concept) => {
-        const status = progress[concept.conceptId]?.status ?? 'unknown'
-        return `
-          <article class="cyberdex-card">
-            <div class="cyberdex-title">${concept.name}</div>
-            <div class="cyberdex-status">${status}</div>
-            <p>${concept.plainDefinition}</p>
-          </article>
-        `
-      })
-      .join('')
+    const entries = Object.values(concepts).filter((concept) => Boolean(progress[concept.conceptId] && progress[concept.conceptId].status !== 'unknown'))
+    this.cyberdexPanel.innerHTML = entries.length ? `<div class="library-grid">${entries.map((concept) => {
+      const status = progress[concept.conceptId]?.status ?? 'unknown'
+      return `<article class="cyberdex-card"><div class="card-kicker">${concept.domain.replace(/-/g, ' ')}</div><h2>${concept.name}</h2><div class="status-pill">${status}</div><p>${concept.plainDefinition}</p><small>Related: ${concept.relatedConcepts.slice(0, 3).join(', ')}</small></article>`
+    }).join('')}</div>` : '<div class="empty-state"><h2>No discoveries yet</h2><p>Investigate mission evidence to build your CyberDex.</p></div>'
   }
 
   updateCompetencyMatrix(concepts: Record<string, ConceptRecord>, progress: SaveState['conceptProgress']) {
-    const tiles = Object.values(concepts)
-      .filter((concept) => Boolean(progress[concept.conceptId] && progress[concept.conceptId].status !== 'unknown'))
-
-    if (tiles.length === 0) {
-      this.competencyPanel.innerHTML = '<p class="empty-state">No competency progress yet.</p>'
-      return
-    }
-
-    this.competencyPanel.innerHTML = tiles
-      .map((concept) => {
+    const entries = Object.values(concepts).filter((concept) => Boolean(progress[concept.conceptId] && progress[concept.conceptId].status !== 'unknown'))
+    const competent = entries.filter((concept) => ['competent', 'mastered'].includes(progress[concept.conceptId]?.status)).length
+    this.competencyPanel.innerHTML = `
+      <div class="progress-summary"><span>Campaign knowledge</span><strong>${competent} competencies</strong><p>${entries.length} concepts encountered</p></div>
+      ${entries.length ? `<div class="competency-grid">${entries.map((concept) => {
         const status = progress[concept.conceptId]?.status ?? 'unknown'
-        return `<div class="competency-tile competency-${status}">${concept.name}<span>${status}</span></div>`
-      })
-      .join('')
+        return `<article class="competency-tile competency-${status}"><div><strong>${concept.name}</strong><small>${concept.domain.replace(/-/g, ' ')}</small></div><span>${status}</span></article>`
+      }).join('')}</div>` : '<div class="empty-state"><p>Your competency record will appear as you complete missions.</p></div>'}
+    `
   }
 
   showNotification(message: string) {
     this.notificationPanel.textContent = message
     this.notificationPanel.classList.add('visible')
     window.clearTimeout((this.notificationPanel as any)._timeout)
-    ;(this.notificationPanel as any)._timeout = window.setTimeout(() => {
-      this.notificationPanel.classList.remove('visible')
-    }, 3000)
+    ;(this.notificationPanel as any)._timeout = window.setTimeout(() => this.notificationPanel.classList.remove('visible'), 3500)
   }
 }

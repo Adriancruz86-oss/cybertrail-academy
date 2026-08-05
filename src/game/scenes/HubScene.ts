@@ -19,49 +19,64 @@ export class HubScene extends Phaser.Scene {
     super('HubScene')
   }
 
+  preload() {
+    this.load.image('campus', new URL('../../assets/cybertrail-campus.webp', import.meta.url).href)
+    this.load.image('analyst', new URL('../../assets/analyst-sprite.png', import.meta.url).href)
+  }
+
   create() {
     this.cameras.main.setBackgroundColor(0x08181f)
     const { width, height } = this.scale
 
-    this.add.rectangle(width / 2, height / 2, width, height, 0x0f2a44)
+    this.add.image(width / 2, height / 2, 'campus').setDisplaySize(width, height)
+    this.add.rectangle(width / 2, 42, width, 84, 0x071421, 0.72)
     this.add
-      .text(40, 32, 'Cyber World Security Solutions', {
+      .text(34, 24, 'CYBERTRAIL CAMPUS', {
         fontFamily: 'Arial',
-        fontSize: '24px',
+        fontSize: '22px',
         color: '#ffffff',
         fontStyle: 'bold'
       })
       .setShadow(1, 1, '#000000', 2)
 
+    this.add.text(34, 53, 'Follow the objective marker to continue your assignment.', {
+      fontFamily: 'Arial', fontSize: '14px', color: '#c7e9ff'
+    })
+
     this.mayaZone = this.add
-      .rectangle(160, 220, 190, 150, 0x2f80ed)
-      .setStrokeStyle(2, 0x8ed1ff)
+      .rectangle(245, 285, 135, 90, 0x2f80ed, 0)
     this.add
-      .text(160, 220, 'Maya\nSOC Director', {
+      .text(245, 255, 'CWSS HQ', {
         fontFamily: 'Arial',
         fontSize: '16px',
         color: '#ffffff',
-        align: 'center'
+        backgroundColor: '#0b2945cc',
+        padding: { x: 10, y: 6 }
       })
       .setOrigin(0.5)
+
+    this.add.circle(245, 300, 11, 0x54c7ff, 0.9).setStrokeStyle(3, 0xffffff)
 
     this.brightPathZone = this.add
-      .rectangle(720, 220, 220, 150, 0x183252)
-      .setStrokeStyle(2, 0x4ea8de)
+      .rectangle(690, 270, 150, 100, 0x183252, 0)
     this.add
-      .text(720, 220, 'BrightPath\nGateway', {
+      .text(690, 235, 'BRIGHTPATH', {
         fontFamily: 'Arial',
         fontSize: '16px',
         color: '#ffffff',
-        align: 'center'
+        backgroundColor: '#3b291bcc',
+        padding: { x: 10, y: 6 }
       })
       .setOrigin(0.5)
 
+    this.add.circle(690, 285, 11, 0xffc857, 0.95).setStrokeStyle(3, 0xffffff)
+
     this.player = this.physics.add
-      .image(140, 420, '')
-      .setDisplaySize(32, 32)
-      .setTint(0x8bd6ff)
+      .image(480, 500, 'analyst')
+      .setDisplaySize(62, 92)
       .setCollideWorldBounds(true)
+
+    this.player.body.setSize(34, 30).setOffset(14, 60)
 
     this.player.body.setVelocity(0, 0)
 
@@ -74,10 +89,12 @@ export class HubScene extends Phaser.Scene {
     }) as any
 
     this.promptText = this.add
-      .text(width / 2, height - 64, 'Use WASD to move. Press E to interact.', {
+      .text(width / 2, height - 32, 'Move with WASD or touch • E or INTERACT at an entrance', {
         fontFamily: 'Arial',
         fontSize: '16px',
-        color: '#ffffff'
+        color: '#ffffff',
+        backgroundColor: '#071421d9',
+        padding: { x: 14, y: 8 }
       })
       .setOrigin(0.5)
 
@@ -90,6 +107,10 @@ export class HubScene extends Phaser.Scene {
     GameUI.get().updateMissionLog(activeMission)
     GameUI.get().updateCyberDex(ContentService.getAllConcepts(), saveState.conceptProgress)
     GameUI.get().updateCompetencyMatrix(ContentService.getAllConcepts(), saveState.conceptProgress)
+    if (activeMission) {
+      const destination = activeMission.missionId === 'splus-c1-m01' ? 'CWSS Headquarters' : 'BrightPath'
+      GameUI.get().showNotification(`Next: ${activeMission.title}. Enter ${destination}.`)
+    }
   }
 
   update() {
@@ -107,25 +128,25 @@ export class HubScene extends Phaser.Scene {
 
     const nearby = this.findNearbyTarget()
     if (nearby) {
-      const label = nearby === 'maya' ? 'Talk to Maya' : 'Travel to BrightPath'
-      this.promptText.setText(`Press E to ${label}`)
+      const label = nearby === 'maya' ? 'enter CWSS Headquarters' : 'enter BrightPath'
+      this.promptText.setText(`Press E or tap INTERACT to ${label}`)
       if (Phaser.Input.Keyboard.JustDown(this.keys.E)) {
         this.handleInteract(nearby)
       }
     } else {
-      this.promptText.setText('Use WASD to move. Press E to interact.')
+      this.promptText.setText('Move with WASD or touch • E or INTERACT at an entrance')
     }
   }
 
   private createTouchControls() {
     const controls: Array<[number, number, string, Direction]> = [
-      [60, 500, '◀', 'left'],
-      [160, 500, '▶', 'right'],
-      [60, 595, '▲', 'up'],
-      [160, 595, '▼', 'down']
+      [60, 510, '◀', 'left'],
+      [175, 510, '▶', 'right'],
+      [60, 600, '▲', 'up'],
+      [175, 600, '▼', 'down']
     ]
     controls.forEach(([x, y, label, direction]) => {
-      const button = this.add.rectangle(x, y, 88, 88, 0x183252, 0.92).setStrokeStyle(3, 0x8ed1ff)
+      const button = this.add.circle(x, y, 55, 0x071421, 0.72).setStrokeStyle(3, 0xb8e5ff, 0.9)
       button.setInteractive({ useHandCursor: true })
       this.add.text(x, y, label, { fontSize: '30px', color: '#ffffff' }).setOrigin(0.5)
       button.on('pointerdown', () => this.touchControls.press(direction))
@@ -134,9 +155,9 @@ export class HubScene extends Phaser.Scene {
       button.on('pointerout', stop)
     })
 
-    const interact = this.add.rectangle(830, 540, 190, 112, 0x2f80ed, 0.92).setStrokeStyle(3, 0x8ed1ff)
+    const interact = this.add.circle(852, 550, 72, 0x146fb0, 0.88).setStrokeStyle(3, 0xffffff, 0.9)
     interact.setInteractive({ useHandCursor: true })
-    this.add.text(830, 540, 'INTERACT', { fontSize: '20px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5)
+    this.add.text(852, 550, 'INTERACT', { fontSize: '17px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5)
     interact.on('pointerdown', () => {
       const nearby = this.findNearbyTarget()
       if (nearby) this.handleInteract(nearby)

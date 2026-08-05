@@ -76,6 +76,18 @@ Before delivery, run both `npm test` and `npm run build`.
 8. Confirm Missions 10–12 unlock sequentially, grant rewards once, and populate their CyberDex and Competency Matrix entries.
 9. Repeat Missions 10–12 at phone portrait and landscape sizes and verify all four-option activities remain readable and touchable.
 
+## Sprint 7 world and interface testing
+
+1. Confirm the campus hub displays recognizable CWSS and BrightPath buildings, landscaped paths, visible entrances, and the analyst sprite.
+2. Verify the CWSS and BrightPath entrance markers still launch the correct sequential missions.
+3. Confirm Mission, CyberDex, Progress, and Settings open as dedicated screens and close with the close button or Escape.
+4. Verify the current destination notification identifies CWSS for Mission 1 and BrightPath for later missions.
+5. On phone portrait, confirm the world remains primary, the HUD sits below the canvas, and menu screens occupy the full viewport.
+6. On phone landscape and desktop, confirm the compact navigation does not cover essential world interactions.
+7. Verify the CyberDex and Progress screens can scroll through every discovered concept without the earlier entry caps.
+8. Confirm touch movement, Interact, WASD, E, text sizing, reduced motion, save/resume, and reset confirmation remain functional.
+9. Regression-test Missions 1–12, then run `npm test` and `npm run build`.
+
 ## What is implemented
 
 - Phaser 3 player movement and hub interaction
@@ -86,6 +98,7 @@ Before delivery, run both `npm test` and `npm run build`.
 - Basic PWA support with `manifest.json` and `sw.js`
 - Persisted mission attempts, prerequisite enforcement, and one-time rewards
 - Touch controls plus large-text and reduced-motion preferences
+- Illustrated campus hub with dedicated Mission, CyberDex, Progress, and Settings screens
 
 ## Architecture
 

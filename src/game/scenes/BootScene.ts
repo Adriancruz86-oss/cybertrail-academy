@@ -52,12 +52,13 @@ export class BootScene extends Phaser.Scene {
       )
       .setOrigin(0.5)
 
+    const hasProgress = SaveService.hasProgress()
     const startButton = this.add
-      .rectangle(width / 2, 360, 260, 60, 0x2f80ed)
+      .rectangle(width / 2, 350, 260, 60, 0x2f80ed)
       .setInteractive({ useHandCursor: true })
 
     this.add
-      .text(width / 2, 360, 'BEGIN FIRST SHIFT', {
+      .text(width / 2, 350, hasProgress ? 'CONTINUE SHIFT' : 'BEGIN FIRST SHIFT', {
         fontFamily: 'Arial',
         fontSize: '18px',
         color: '#ffffff',
@@ -68,9 +69,23 @@ export class BootScene extends Phaser.Scene {
     startButton.on('pointerover', () => startButton.setFillStyle(0x4ea8de))
     startButton.on('pointerout', () => startButton.setFillStyle(0x2f80ed))
     startButton.on('pointerdown', () => {
-      SaveService.reset()
       this.scene.start('HubScene')
     })
+
+    if (hasProgress) {
+      const newGame = this.add
+        .text(width / 2, 415, 'Start new game', {
+          fontFamily: 'Arial',
+          fontSize: '16px',
+          color: '#b9d8f5'
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true })
+      newGame.on('pointerdown', () => {
+        SaveService.reset()
+        this.scene.restart()
+      })
+    }
 
     GameUI.init()
     GameUI.get().showNotification('Use the hub to travel between the SOC and BrightPath.')

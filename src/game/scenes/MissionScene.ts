@@ -3,6 +3,7 @@ import { ContentService } from '../../services/contentService'
 import { SaveService } from '../../services/saveService'
 import { MasteryService } from '../../services/masteryService'
 import { GameUI } from '../../ui/GameUI'
+import { ProgressionService } from '../../services/progressionService'
 
 type MissionSceneData = { missionId?: string }
 
@@ -19,7 +20,7 @@ export class MissionScene extends Phaser.Scene {
     this.missionId = data?.missionId ?? ''
     if (!this.missionId) {
       const save = SaveService.get()
-      this.missionId = save.unlockedMissions.find((id) => !save.completedMissions.includes(id)) ?? ''
+      this.missionId = ProgressionService.getNextMission(save)?.missionId ?? ''
     }
   }
 
@@ -28,8 +29,8 @@ export class MissionScene extends Phaser.Scene {
     this.optionButtons = []
 
     const mission = ContentService.getMission(this.missionId)
-    if (!mission) {
-      this.add.text(50, 120, 'Mission not found.', {
+    if (!mission || !ProgressionService.isAvailable(SaveService.get(), this.missionId)) {
+      this.add.text(50, 120, 'Mission unavailable.', {
         fontFamily: 'Arial',
         fontSize: '24px',
         color: '#ff6b6b'
@@ -119,27 +120,25 @@ export class MissionScene extends Phaser.Scene {
     }
 
     SaveService.update((state) => {
+      const isFirstAttempt = ProgressionService.recordAttempt(state, mission.missionId, option.correct)
       mission.masteryEvidence.forEach((evidence) => {
-        MasteryService.recordExposure(state, evidence.conceptId)
         MasteryService.recordAttempt(state, {
           conceptId: evidence.conceptId,
           missionId: mission.missionId,
           evidenceType: evidence.evidenceType,
           correct: option.correct,
-          firstAttempt: true,
+          firstAttempt: evidence.firstAttemptRequired ? isFirstAttempt : true,
           hintUsed: false,
           independent: evidence.independent
         })
       })
+      if (option.correct) {
+        mission.rewards.cyberDexEntries.forEach((conceptId) => MasteryService.recordExposure(state, conceptId))
+        ProgressionService.complete(state, mission.missionId, mission.rewards.xp)
+      }
     })
 
     if (option.correct) {
-      SaveService.completeMission(mission.missionId)
-      SaveService.addXp(mission.rewards.xp)
-      const nextMission = ContentService.getNextMission(mission.missionId)
-      if (nextMission) {
-        SaveService.unlockMission(nextMission.missionId)
-      }
       GameUI.get().showNotification('Mission complete. Return to the hub to continue.')
     } else {
       GameUI.get().showNotification('Incorrect choice. Review the explanation and return to the hub.')

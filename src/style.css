@@ -17,8 +17,13 @@ body {
   font-family: Arial, sans-serif;
   background: #08101c;
   color: #ffffff;
-  overflow: hidden;
+  overflow: auto;
 }
+
+html[data-text-size='large'] { font-size: 118%; }
+html[data-reduced-motion='true'] *,
+html[data-reduced-motion='true'] *::before,
+html[data-reduced-motion='true'] *::after { animation: none !important; transition: none !important; }
 
 #app {
   width: 100vw;
@@ -61,6 +66,18 @@ body {
   margin-bottom: 8px;
   font-size: 14px;
 }
+
+.setting-button {
+  border: 1px solid #5eabff;
+  border-radius: 8px;
+  background: #183252;
+  color: #ffffff;
+  cursor: pointer;
+  margin: 4px 6px 0 0;
+  padding: 6px 8px;
+}
+
+.setting-button:focus-visible { outline: 3px solid #9fd4ff; outline-offset: 2px; }
 
 .mission-panel h2 {
   margin: 0 0 8px;
@@ -155,4 +172,7 @@ body {
     max-height: none;
     margin: 12px;
   }
+
+  #app { min-height: 60vh; height: 70vh; }
+  .sidebar-panel { max-height: 45vh; overflow-y: auto; }
 }

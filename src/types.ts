@@ -3,6 +3,7 @@ export type ConceptStatus =
   | 'exposed'
   | 'recognized'
   | 'applied'
+  | 'reasoned'
   | 'competent'
   | 'mastered'
 
@@ -68,6 +69,12 @@ export interface ConceptProgressState {
   nextReview: number | null
 }
 
+export interface MissionAttemptState {
+  attempts: number
+  firstAttemptCorrect: boolean | null
+  rewardGranted: boolean
+}
+
 export interface SaveState {
   version: number
   playerId: string
@@ -76,6 +83,7 @@ export interface SaveState {
   xp: number
   completedMissions: string[]
   unlockedMissions: string[]
+  missionAttempts: Record<string, MissionAttemptState>
   conceptProgress: Record<string, ConceptProgressState>
   settings: {
     sound: boolean

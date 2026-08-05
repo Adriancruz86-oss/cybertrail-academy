@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { SaveService } from '../../services/saveService'
 import { ContentService } from '../../services/contentService'
 import { GameUI } from '../../ui/GameUI'
+import { ProgressionService } from '../../services/progressionService'
 
 const PLAYER_SPEED = 180
 
@@ -11,6 +12,7 @@ export class HubScene extends Phaser.Scene {
   private mayaZone!: Phaser.GameObjects.Rectangle
   private brightPathZone!: Phaser.GameObjects.Rectangle
   private promptText!: Phaser.GameObjects.Text
+  private touchVelocity = { x: 0, y: 0 }
 
   constructor() {
     super('HubScene')
@@ -78,9 +80,10 @@ export class HubScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
 
+    this.createTouchControls()
+
     const saveState = SaveService.load()
-    const nextMissionId = saveState.unlockedMissions.find((id) => !saveState.completedMissions.includes(id))
-    const activeMission = nextMissionId ? ContentService.getMission(nextMissionId) : undefined
+    const activeMission = ProgressionService.getNextMission(saveState)
 
     GameUI.get().updateStatus(saveState)
     GameUI.get().updateMissionLog(activeMission)
@@ -93,7 +96,7 @@ export class HubScene extends Phaser.Scene {
       return
     }
 
-    const velocity = { x: 0, y: 0 }
+    const velocity = { ...this.touchVelocity }
     if (this.keys.left.isDown) velocity.x = -PLAYER_SPEED
     if (this.keys.right.isDown) velocity.x = PLAYER_SPEED
     if (this.keys.up.isDown) velocity.y = -PLAYER_SPEED
@@ -111,6 +114,32 @@ export class HubScene extends Phaser.Scene {
     } else {
       this.promptText.setText('Use WASD to move. Press E to interact.')
     }
+  }
+
+  private createTouchControls() {
+    const controls: Array<[number, number, string, number, number]> = [
+      [70, 540, '◀', -PLAYER_SPEED, 0],
+      [150, 540, '▶', PLAYER_SPEED, 0],
+      [110, 500, '▲', 0, -PLAYER_SPEED],
+      [110, 580, '▼', 0, PLAYER_SPEED]
+    ]
+    controls.forEach(([x, y, label, vx, vy]) => {
+      const button = this.add.rectangle(x, y, 58, 58, 0x183252, 0.9).setStrokeStyle(2, 0x8ed1ff)
+      button.setInteractive({ useHandCursor: true })
+      this.add.text(x, y, label, { fontSize: '22px', color: '#ffffff' }).setOrigin(0.5)
+      button.on('pointerdown', () => (this.touchVelocity = { x: vx, y: vy }))
+      const stop = () => (this.touchVelocity = { x: 0, y: 0 })
+      button.on('pointerup', stop)
+      button.on('pointerout', stop)
+    })
+
+    const interact = this.add.rectangle(850, 550, 92, 64, 0x2f80ed, 0.9).setStrokeStyle(2, 0x8ed1ff)
+    interact.setInteractive({ useHandCursor: true })
+    this.add.text(850, 550, 'INTERACT', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5)
+    interact.on('pointerdown', () => {
+      const nearby = this.findNearbyTarget()
+      if (nearby) this.handleInteract(nearby)
+    })
   }
 
   private findNearbyTarget(): 'maya' | 'brightpath' | null {
@@ -138,7 +167,11 @@ export class HubScene extends Phaser.Scene {
     const mission1Complete = saveState.completedMissions.includes('splus-c1-m01')
 
     if (target === 'maya') {
-      this.scene.start('MissionScene', { missionId: 'splus-c1-m01' })
+      if (mission1Complete) {
+        GameUI.get().showNotification('The SOC introduction is complete. Continue through BrightPath.')
+      } else {
+        this.scene.start('MissionScene', { missionId: 'splus-c1-m01' })
+      }
       return
     }
 
@@ -147,9 +180,9 @@ export class HubScene extends Phaser.Scene {
       return
     }
 
-    const nextMissionId = saveState.unlockedMissions.find((id) => !saveState.completedMissions.includes(id))
-    if (nextMissionId) {
-      this.scene.start('MissionScene', { missionId: nextMissionId })
+    const nextMission = ProgressionService.getNextMission(saveState)
+    if (nextMission) {
+      this.scene.start('MissionScene', { missionId: nextMission.missionId })
     } else {
       GameUI.get().showNotification('No unlocked mission available yet.')
     }

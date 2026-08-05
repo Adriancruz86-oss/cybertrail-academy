@@ -36,6 +36,22 @@ npm run test
 - Mastery engine with first-attempt, distinct-context competency streak rules
 - CyberDex and Competency Matrix UI panels
 - Basic PWA support with `manifest.json` and `sw.js`
+- Persisted mission attempts, prerequisite enforcement, and one-time rewards
+- Touch controls plus large-text and reduced-motion preferences
+
+## Architecture
+
+- `src/game/scenes`: Phaser scene flow
+- `src/data`: data-driven concepts and missions
+- `src/services`: content lookup, save migration, progression, and mastery rules
+- `src/ui`: accessible HTML status and learning panels
+- `tests`: mastery, save, progression, and content-integrity checks
+
+TypeScript is the only maintained source. Builds type-check without emitting compiled files into `src`.
+
+## Deployment
+
+The production base path is `/cybertrail-academy/` for GitHub Pages. The service worker uses runtime caching for same-origin built assets and removes stale cache versions during activation.
 
 ## Notes
 

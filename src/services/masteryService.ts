@@ -1,23 +1,14 @@
 import type { SaveState, EvidenceType, ConceptProgressState } from '../types'
+import { createDefaultProgress } from './saveService'
 
 function ensureProgress(state: SaveState, conceptId: string): ConceptProgressState {
   if (!state.conceptProgress[conceptId]) {
-    state.conceptProgress[conceptId] = {
-      status: 'unknown',
-      exposures: 0,
-      applicationSuccesses: 0,
-      reasoningSuccesses: 0,
-      currentCompetencyStreak: 0,
-      lastSuccessfulMissionId: null,
-      mistakes: [],
-      lastReviewed: null,
-      nextReview: null
-    }
+    state.conceptProgress[conceptId] = createDefaultProgress()
   }
   return state.conceptProgress[conceptId]
 }
 
-function updateStatusForCorrect(progress: ConceptProgressState, evidenceType: EvidenceType) {
+function updateStatusForCorrect(progress: ConceptProgressState, evidenceType: EvidenceType, now: number) {
   if (evidenceType === 'application') {
     progress.applicationSuccesses += 1
   }
@@ -25,11 +16,17 @@ function updateStatusForCorrect(progress: ConceptProgressState, evidenceType: Ev
     progress.reasoningSuccesses += 1
   }
 
-  if (progress.currentCompetencyStreak >= 2) {
-  progress.status = 'competent'
-} else {
-  progress.status = 'applied'
-}
+  if (progress.status === 'competent' && progress.lastReviewed && now > progress.lastReviewed) {
+    progress.status = 'mastered'
+  } else if (progress.currentCompetencyStreak >= 2) {
+    progress.status = 'competent'
+  } else if (evidenceType === 'reasoning' || evidenceType === 'assessment') {
+    progress.status = 'reasoned'
+  } else {
+    progress.status = 'applied'
+  }
+  progress.lastReviewed = now
+  progress.nextReview = now + 7 * 24 * 60 * 60 * 1000
 }
 
 export const MasteryService = {
@@ -50,8 +47,14 @@ export const MasteryService = {
     firstAttempt: boolean
     hintUsed: boolean
     independent: boolean
+    now?: number
   }): ConceptProgressState {
     const progress = ensureProgress(state, args.conceptId)
+
+    if (args.evidenceType === 'recognition' && args.correct && args.firstAttempt) {
+      progress.status = 'recognized'
+      return progress
+    }
 
     if (!args.firstAttempt || args.hintUsed || !args.independent) {
       return progress
@@ -77,7 +80,7 @@ export const MasteryService = {
       progress.lastSuccessfulMissionId = args.missionId
     }
 
-    updateStatusForCorrect(progress, args.evidenceType)
+    updateStatusForCorrect(progress, args.evidenceType, args.now ?? Date.now())
     return progress
   }
 }

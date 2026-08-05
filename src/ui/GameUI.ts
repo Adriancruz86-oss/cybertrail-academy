@@ -1,4 +1,5 @@
 import type { MissionData, ConceptRecord, SaveState } from '../types'
+import { SaveService } from '../services/saveService'
 
 export class GameUI {
   private static instance: GameUI | null = null
@@ -43,11 +44,27 @@ export class GameUI {
   }
 
   updateStatus(state: SaveState) {
+    document.documentElement.dataset.textSize = state.settings.textSize
+    document.documentElement.dataset.reducedMotion = String(state.settings.reducedMotion)
     this.statusPanel.innerHTML = `
       <div class="status-card"><strong>Analyst:</strong> ${state.displayName}</div>
       <div class="status-card"><strong>Rank:</strong> ${state.rank.replace(/-/g, ' ')}</div>
       <div class="status-card"><strong>XP:</strong> ${state.xp}</div>
+      <button class="setting-button" data-setting="text">${state.settings.textSize === 'large' ? 'Standard text' : 'Large text'}</button>
+      <button class="setting-button" data-setting="motion">${state.settings.reducedMotion ? 'Enable motion' : 'Reduce motion'}</button>
     `
+    this.statusPanel.querySelector('[data-setting="text"]')?.addEventListener('click', () => {
+      const updated = SaveService.update((save) => {
+        save.settings.textSize = save.settings.textSize === 'large' ? 'standard' : 'large'
+      })
+      this.updateStatus(updated)
+    })
+    this.statusPanel.querySelector('[data-setting="motion"]')?.addEventListener('click', () => {
+      const updated = SaveService.update((save) => {
+        save.settings.reducedMotion = !save.settings.reducedMotion
+      })
+      this.updateStatus(updated)
+    })
   }
 
   updateMissionLog(mission?: MissionData) {

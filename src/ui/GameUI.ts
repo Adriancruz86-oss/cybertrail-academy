@@ -1,4 +1,4 @@
-import type { MissionData, ConceptRecord, SaveState } from '../types'
+import type { MissionData, ConceptRecord, SaveState, MissionActivity, MissionActivityOption } from '../types'
 import { SaveService } from '../services/saveService'
 
 type ScreenName = 'mission' | 'cyberdex' | 'progress' | 'settings'
@@ -14,6 +14,8 @@ export class GameUI {
   private overlay: HTMLElement
   private overlayTitle: HTMLElement
   private notificationPanel: HTMLElement
+  private decisionOverlay: HTMLElement
+  private missionExitButton: HTMLButtonElement
 
   private constructor() {
     this.root = document.createElement('div')
@@ -42,6 +44,15 @@ export class GameUI {
           </div>
         </section>
       </div>
+      <button class="mission-exit-button" aria-label="Exit mission">Exit mission</button>
+      <section class="decision-overlay" aria-hidden="true" aria-labelledby="decision-prompt">
+        <div class="decision-dialog">
+          <div class="decision-kicker">Make a decision</div>
+          <h1 id="decision-prompt"></h1>
+          <div class="decision-options"></div>
+          <button class="decision-hint"></button>
+        </div>
+      </section>
       <div class="notification-panel" aria-live="assertive"></div>
     `
     document.body.appendChild(this.root)
@@ -53,6 +64,8 @@ export class GameUI {
     this.overlay = this.root.querySelector('.screen-overlay') as HTMLElement
     this.overlayTitle = this.root.querySelector('#screen-title') as HTMLElement
     this.notificationPanel = this.root.querySelector('.notification-panel') as HTMLElement
+    this.decisionOverlay = this.root.querySelector('.decision-overlay') as HTMLElement
+    this.missionExitButton = this.root.querySelector('.mission-exit-button') as HTMLButtonElement
 
     this.root.querySelectorAll<HTMLButtonElement>('[data-screen]').forEach((button) => {
       button.addEventListener('click', () => this.openScreen(button.dataset.screen as ScreenName))
@@ -84,6 +97,48 @@ export class GameUI {
   closeScreen() {
     this.overlay.setAttribute('aria-hidden', 'true')
     this.overlay.classList.remove('visible')
+  }
+
+  showMissionExit(onExit: () => void) {
+    this.missionExitButton.classList.add('visible')
+    this.missionExitButton.onclick = onExit
+  }
+
+  hideMissionExit() {
+    this.missionExitButton.classList.remove('visible')
+    this.missionExitButton.onclick = null
+  }
+
+  showDecision(args: {
+    activity: MissionActivity
+    hint: string
+    hintUsed: boolean
+    onSelect: (option: MissionActivityOption) => void
+    onHint: () => void
+  }) {
+    ;(this.decisionOverlay.querySelector('#decision-prompt') as HTMLElement).textContent = args.activity.prompt
+    const options = this.decisionOverlay.querySelector('.decision-options') as HTMLElement
+    options.innerHTML = ''
+    args.activity.options.forEach((option, index) => {
+      const button = document.createElement('button')
+      button.className = 'decision-option'
+      button.innerHTML = `<span>${String.fromCharCode(65 + index)}</span><strong>${option.label}</strong>`
+      button.addEventListener('click', () => {
+        options.querySelectorAll('button').forEach((item) => { (item as HTMLButtonElement).disabled = true })
+        args.onSelect(option)
+      }, { once: true })
+      options.appendChild(button)
+    })
+    const hintButton = this.decisionOverlay.querySelector('.decision-hint') as HTMLButtonElement
+    hintButton.textContent = args.hintUsed ? `Hint: ${args.hint}` : 'Show hint'
+    hintButton.onclick = args.hintUsed ? null : args.onHint
+    this.decisionOverlay.setAttribute('aria-hidden', 'false')
+    this.decisionOverlay.classList.add('visible')
+  }
+
+  hideDecision() {
+    this.decisionOverlay.setAttribute('aria-hidden', 'true')
+    this.decisionOverlay.classList.remove('visible')
   }
 
   updateStatus(state: SaveState) {

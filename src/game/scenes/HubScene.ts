@@ -3,7 +3,7 @@ import { SaveService } from '../../services/saveService'
 import { ContentService } from '../../services/contentService'
 import { GameUI } from '../../ui/GameUI'
 import { ProgressionService } from '../../services/progressionService'
-import { TouchControlState, type Direction } from '../touchControls'
+import { JoystickState } from '../touchControls'
 
 const PLAYER_SPEED = 180
 
@@ -13,7 +13,7 @@ export class HubScene extends Phaser.Scene {
   private mayaZone!: Phaser.GameObjects.Rectangle
   private brightPathZone!: Phaser.GameObjects.Rectangle
   private promptText!: Phaser.GameObjects.Text
-  private touchControls = new TouchControlState()
+  private joystick = new JoystickState()
 
   constructor() {
     super('HubScene')
@@ -71,6 +71,13 @@ export class HubScene extends Phaser.Scene {
 
     this.add.circle(690, 285, 11, 0xffc857, 0.95).setStrokeStyle(3, 0xffffff)
 
+    this.add.rectangle(245, 190, 400, 235, 0xffffff, 0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.handleInteract('maya'))
+    this.add.rectangle(720, 180, 390, 225, 0xffffff, 0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.handleInteract('brightpath'))
+
     this.player = this.physics.add
       .image(480, 500, 'analyst')
       .setDisplaySize(62, 92)
@@ -103,6 +110,11 @@ export class HubScene extends Phaser.Scene {
     const saveState = SaveService.load()
     const activeMission = ProgressionService.getNextMission(saveState)
 
+    if (activeMission) {
+      const target = activeMission.missionId === 'splus-c1-m01' ? this.mayaZone : this.brightPathZone
+      this.createObjectiveBeacon(target.x, target.y - 82, saveState.settings.reducedMotion)
+    }
+
     GameUI.get().updateStatus(saveState)
     GameUI.get().updateMissionLog(activeMission)
     GameUI.get().updateCyberDex(ContentService.getAllConcepts(), saveState.conceptProgress)
@@ -118,7 +130,7 @@ export class HubScene extends Phaser.Scene {
       return
     }
 
-    const velocity = this.touchControls.velocity(PLAYER_SPEED)
+    const velocity = this.joystick.velocity(PLAYER_SPEED)
     if (this.keys.left.isDown) velocity.x = -PLAYER_SPEED
     if (this.keys.right.isDown) velocity.x = PLAYER_SPEED
     if (this.keys.up.isDown) velocity.y = -PLAYER_SPEED
@@ -139,21 +151,34 @@ export class HubScene extends Phaser.Scene {
   }
 
   private createTouchControls() {
-    const controls: Array<[number, number, string, Direction]> = [
-      [60, 510, '◀', 'left'],
-      [175, 510, '▶', 'right'],
-      [60, 600, '▲', 'up'],
-      [175, 600, '▼', 'down']
-    ]
-    controls.forEach(([x, y, label, direction]) => {
-      const button = this.add.circle(x, y, 55, 0x071421, 0.72).setStrokeStyle(3, 0xb8e5ff, 0.9)
-      button.setInteractive({ useHandCursor: true })
-      this.add.text(x, y, label, { fontSize: '30px', color: '#ffffff' }).setOrigin(0.5)
-      button.on('pointerdown', () => this.touchControls.press(direction))
-      const stop = () => this.touchControls.release(direction)
-      button.on('pointerup', stop)
-      button.on('pointerout', stop)
+    const center = { x: 112, y: 550 }
+    const maxRadius = 48
+    const base = this.add.circle(center.x, center.y, 78, 0x071421, 0.74)
+      .setStrokeStyle(3, 0xb8e5ff, 0.9)
+      .setInteractive({ useHandCursor: true })
+    this.add.text(center.x, center.y - 94, 'MOVE', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5)
+    const knob = this.add.circle(center.x, center.y, 31, 0x49aee8, 0.95).setStrokeStyle(3, 0xffffff, 0.9)
+    let dragging = false
+
+    const updateJoystick = (pointer: Phaser.Input.Pointer) => {
+      this.joystick.update(pointer.x - center.x, pointer.y - center.y, maxRadius)
+      const position = this.joystick.position()
+      knob.setPosition(center.x + position.x * maxRadius, center.y + position.y * maxRadius)
+    }
+    const stopJoystick = () => {
+      dragging = false
+      this.joystick.reset()
+      knob.setPosition(center.x, center.y)
+    }
+    base.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      dragging = true
+      updateJoystick(pointer)
     })
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (dragging && pointer.isDown) updateJoystick(pointer)
+    })
+    this.input.on('pointerup', stopJoystick)
+    this.input.on('gameout', stopJoystick)
 
     const interact = this.add.circle(852, 550, 72, 0x146fb0, 0.88).setStrokeStyle(3, 0xffffff, 0.9)
     interact.setInteractive({ useHandCursor: true })
@@ -162,6 +187,20 @@ export class HubScene extends Phaser.Scene {
       const nearby = this.findNearbyTarget()
       if (nearby) this.handleInteract(nearby)
     })
+  }
+
+  private createObjectiveBeacon(x: number, y: number, reducedMotion: boolean) {
+    const beacon = this.add.container(x, y)
+    const glow = this.add.circle(0, 0, 28, 0xffd35a, 0.2).setStrokeStyle(3, 0xffeb99, 0.95)
+    const bulb = this.add.text(0, -2, '💡', { fontSize: '30px' }).setOrigin(0.5)
+    const label = this.add.text(0, 38, 'COME HERE', {
+      fontFamily: 'Arial', fontSize: '13px', color: '#071421', backgroundColor: '#ffe384',
+      fontStyle: 'bold', padding: { x: 8, y: 4 }
+    }).setOrigin(0.5)
+    beacon.add([glow, bulb, label])
+    if (!reducedMotion) {
+      this.tweens.add({ targets: beacon, y: y - 10, alpha: 0.55, duration: 650, yoyo: true, repeat: -1, ease: 'Sine.inOut' })
+    }
   }
 
   private findNearbyTarget(): 'maya' | 'brightpath' | null {

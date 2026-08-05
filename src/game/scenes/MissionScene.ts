@@ -11,7 +11,6 @@ type MissionSceneData = { missionId?: string }
 
 export class MissionScene extends Phaser.Scene {
   private missionId = ''
-  private optionButtons: Phaser.GameObjects.Container[] = []
   private mobile = false
 
   constructor() { super('MissionScene') }
@@ -34,12 +33,21 @@ export class MissionScene extends Phaser.Scene {
         state.activeMission = { missionId: this.missionId, stage: 'briefing', investigationIndex: 0, hintUsed: false, selectedOptionId: null, collectedEvidence: [], decisions: [], discoveredConcepts: [], masteryEvidenceEarned: [], activityIndex: 0, activityAttempts: {} }
       })
     }
+    GameUI.get().showMissionExit(() => {
+      GameUI.get().hideDecision()
+      GameUI.get().showNotification('Mission paused. Return to the highlighted building when you are ready.')
+      this.scene.start('HubScene')
+    })
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      GameUI.get().hideDecision()
+      GameUI.get().hideMissionExit()
+    })
     this.renderStage()
   }
 
   private renderStage() {
+    GameUI.get().hideDecision()
     this.children.removeAll()
-    this.optionButtons = []
     this.cameras.main.setBackgroundColor(0x08101c)
     const mission = ContentService.getMission(this.missionId)!
     const session = SaveService.get().activeMission!
@@ -107,26 +115,24 @@ export class MissionScene extends Phaser.Scene {
     const mission = ContentService.getMission(this.missionId)!
     const session = SaveService.get().activeMission!
     const activity = this.getActivities()[session.activityIndex]
-    this.add.text(40, 112, activity.prompt, { fontFamily: 'Arial', fontSize: this.mobile ? '32px' : '20px', color: '#ffffff', wordWrap: { width: 820 } })
-    activity.options.forEach((option, index) => {
-      const y = 180 + index * 70
-      const bg = this.add.rectangle(0, 0, 700, 62, 0x2f80ed)
-      const text = this.add.text(-330, 0, option.label, { fontFamily: 'Arial', fontSize: this.mobile ? '30px' : '18px', color: '#ffffff', wordWrap: { width: 630 } }).setOrigin(0, 0.5)
-      const button = this.add.container(390, y, [bg, text]).setSize(700, 62).setInteractive(new Phaser.Geom.Rectangle(-350, -31, 700, 62), Phaser.Geom.Rectangle.Contains, true)
-      button.on('pointerdown', () => this.handleSelection(option))
-      this.optionButtons.push(button)
+    this.add.text(40, 125, 'Review the question and choices in the decision panel.', {
+      fontFamily: 'Arial', fontSize: this.mobile ? '32px' : '20px', color: '#dbeafe'
     })
-    const hint = this.add.text(40, 470, session.hintUsed ? `Hint: ${mission.hint}` : 'Need a hint?', { fontFamily: 'Arial', fontSize: this.mobile ? '28px' : '17px', color: '#9fd4ff', wordWrap: { width: 800 } }).setInteractive({ useHandCursor: true })
-    hint.on('pointerdown', () => {
-      SaveService.update((state) => { if (state.activeMission) state.activeMission.hintUsed = true })
-      this.renderStage()
+    GameUI.get().showDecision({
+      activity,
+      hint: mission.hint,
+      hintUsed: session.hintUsed,
+      onSelect: (option) => this.handleSelection(option),
+      onHint: () => {
+        SaveService.update((state) => { if (state.activeMission) state.activeMission.hintUsed = true })
+        this.renderStage()
+      }
     })
   }
 
   private handleSelection(option: MissionActivityOption) {
     const mission = ContentService.getMission(this.missionId)!
     const session = SaveService.get().activeMission!
-    this.optionButtons.forEach((button) => button.disableInteractive())
     SaveService.update((state) => {
       ProgressionService.recordAttempt(state, mission.missionId, option.correct)
       if (!state.activeMission) return

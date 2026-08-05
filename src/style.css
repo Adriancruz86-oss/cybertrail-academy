@@ -92,6 +92,74 @@ html[data-reduced-motion='true'] *, html[data-reduced-motion='true'] *::before, 
 }
 .screen-overlay.visible { opacity: 1; visibility: visible; pointer-events: auto; }
 
+.mission-exit-button {
+  position: fixed;
+  top: 78px;
+  right: 18px;
+  z-index: 52;
+  display: none;
+  min-height: 46px;
+  border: 1px solid rgba(255, 211, 105, .72);
+  border-radius: 12px;
+  background: rgba(79, 39, 22, .94);
+  color: #fff7db;
+  cursor: pointer;
+  padding: 9px 16px;
+  pointer-events: auto;
+}
+.mission-exit-button.visible { display: block; }
+.mission-exit-button:hover, .mission-exit-button:focus-visible { background: #814827; outline: 3px solid #ffd977; }
+
+.decision-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 48;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 76px 24px 24px;
+  background: rgba(2, 9, 15, .84);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+.decision-overlay.visible { opacity: 1; visibility: visible; pointer-events: auto; }
+.decision-dialog {
+  width: min(880px, 100%);
+  max-height: calc(100dvh - 100px);
+  overflow-y: auto;
+  border: 1px solid rgba(119, 204, 255, .48);
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(18, 48, 72, .99), rgba(5, 17, 29, .99));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .6);
+  padding: clamp(20px, 4vw, 36px);
+}
+.decision-kicker { color: #8ed8ff; font-size: .76rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.decision-dialog h1 { margin: 8px 0 22px; font-size: clamp(1.25rem, 3.4vw, 2rem); line-height: 1.32; }
+.decision-options { display: grid; gap: 12px; }
+.decision-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  border: 1px solid rgba(116, 205, 255, .4);
+  border-radius: 14px;
+  background: #123b59;
+  color: #fff;
+  cursor: pointer;
+  padding: 11px 16px;
+  text-align: left;
+  touch-action: manipulation;
+}
+.decision-option span { display: grid; flex: 0 0 36px; width: 36px; height: 36px; place-items: center; border-radius: 50%; background: #62c7ff; color: #062039; font-weight: 900; }
+.decision-option strong { line-height: 1.4; }
+.decision-option:hover, .decision-option:focus-visible { border-color: #aee4ff; background: #1d577e; outline: 3px solid rgba(130, 211, 255, .65); }
+.decision-option:disabled { cursor: wait; opacity: .68; }
+.decision-hint { min-height: 44px; margin-top: 16px; border: 0; border-radius: 10px; background: rgba(255,255,255,.08); color: #aedeff; cursor: pointer; padding: 9px 13px; text-align: left; touch-action: manipulation; }
+.decision-hint:empty { display: none; }
+
 .screen-dialog {
   width: min(1040px, 100%);
   height: min(760px, 92dvh);
@@ -195,6 +263,11 @@ html[data-reduced-motion='true'] *, html[data-reduced-motion='true'] *::before, 
   .screen-body { padding: 18px; }
   .library-grid, .competency-grid { grid-template-columns: 1fr; }
   .notification-panel { bottom: 10px; }
+  .mission-exit-button { top: 10px; right: 10px; min-height: 44px; }
+  .decision-overlay { padding: 62px 10px 10px; }
+  .decision-dialog { width: 100%; max-height: calc(100dvh - 72px); border-radius: 16px; padding: 18px 14px; }
+  .decision-dialog h1 { margin-bottom: 16px; font-size: 1.2rem; }
+  .decision-option { min-height: 58px; padding: 9px 11px; }
 }
 
 @media (max-height: 520px) and (orientation: landscape) {
@@ -205,4 +278,10 @@ html[data-reduced-motion='true'] *, html[data-reduced-motion='true'] *::before, 
   .screen-dialog { width: min(920px, 96vw); height: 94dvh; border: 1px solid rgba(119,204,255,.38); border-radius: 18px; }
   .screen-header { min-height: 58px; }
   .screen-body { height: calc(100% - 58px); padding: 16px; }
+  .decision-overlay { align-items: start; padding: 58px 10px 8px; }
+  .decision-dialog { max-height: calc(100dvh - 66px); padding: 14px 18px; }
+  .decision-dialog h1 { margin: 5px 0 11px; font-size: 1.08rem; }
+  .decision-options { gap: 7px; }
+  .decision-option { min-height: 49px; padding: 7px 11px; }
+  .decision-hint { min-height: 38px; margin-top: 8px; }
 }

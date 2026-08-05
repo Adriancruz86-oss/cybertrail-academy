@@ -100,6 +100,16 @@ Before delivery, run both `npm test` and `npm run build`.
 - Touch controls plus large-text and reduced-motion preferences
 - Illustrated campus hub with dedicated Mission, CyberDex, Progress, and Settings screens
 
+## Sprint 7.1 interaction testing
+
+1. Tap either campus building and confirm its entrance behavior runs immediately; verify WASD, E, joystick movement, and Interact still work.
+2. Confirm the pulsing COME HERE beacon marks CWSS for Mission 1 and BrightPath for later missions, and becomes static when reduced motion is enabled.
+3. Drag the joystick in every direction, release outside its base, and confirm the analyst stops without a stuck direction.
+4. Reach a mission decision on phone portrait and landscape. Confirm the prompt never covers an answer and every answer registers with one tap.
+5. Use Show hint and confirm the hint remains readable without covering choices.
+6. Select Exit Mission at the top right, confirm the campus returns, then re-enter the highlighted building and verify the exact mission stage resumes.
+7. Run `npm test` and `npm run build` before publishing.
+
 ## Architecture
 
 - `src/game/scenes`: Phaser scene flow

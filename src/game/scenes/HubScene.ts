@@ -3,6 +3,7 @@ import { SaveService } from '../../services/saveService'
 import { ContentService } from '../../services/contentService'
 import { GameUI } from '../../ui/GameUI'
 import { ProgressionService } from '../../services/progressionService'
+import { TouchControlState, type Direction } from '../touchControls'
 
 const PLAYER_SPEED = 180
 
@@ -12,7 +13,7 @@ export class HubScene extends Phaser.Scene {
   private mayaZone!: Phaser.GameObjects.Rectangle
   private brightPathZone!: Phaser.GameObjects.Rectangle
   private promptText!: Phaser.GameObjects.Text
-  private touchVelocity = { x: 0, y: 0 }
+  private touchControls = new TouchControlState()
 
   constructor() {
     super('HubScene')
@@ -96,7 +97,7 @@ export class HubScene extends Phaser.Scene {
       return
     }
 
-    const velocity = { ...this.touchVelocity }
+    const velocity = this.touchControls.velocity(PLAYER_SPEED)
     if (this.keys.left.isDown) velocity.x = -PLAYER_SPEED
     if (this.keys.right.isDown) velocity.x = PLAYER_SPEED
     if (this.keys.up.isDown) velocity.y = -PLAYER_SPEED
@@ -117,25 +118,25 @@ export class HubScene extends Phaser.Scene {
   }
 
   private createTouchControls() {
-    const controls: Array<[number, number, string, number, number]> = [
-      [70, 540, '◀', -PLAYER_SPEED, 0],
-      [150, 540, '▶', PLAYER_SPEED, 0],
-      [110, 500, '▲', 0, -PLAYER_SPEED],
-      [110, 580, '▼', 0, PLAYER_SPEED]
+    const controls: Array<[number, number, string, Direction]> = [
+      [60, 500, '◀', 'left'],
+      [160, 500, '▶', 'right'],
+      [60, 595, '▲', 'up'],
+      [160, 595, '▼', 'down']
     ]
-    controls.forEach(([x, y, label, vx, vy]) => {
-      const button = this.add.rectangle(x, y, 58, 58, 0x183252, 0.9).setStrokeStyle(2, 0x8ed1ff)
+    controls.forEach(([x, y, label, direction]) => {
+      const button = this.add.rectangle(x, y, 88, 88, 0x183252, 0.92).setStrokeStyle(3, 0x8ed1ff)
       button.setInteractive({ useHandCursor: true })
-      this.add.text(x, y, label, { fontSize: '22px', color: '#ffffff' }).setOrigin(0.5)
-      button.on('pointerdown', () => (this.touchVelocity = { x: vx, y: vy }))
-      const stop = () => (this.touchVelocity = { x: 0, y: 0 })
+      this.add.text(x, y, label, { fontSize: '30px', color: '#ffffff' }).setOrigin(0.5)
+      button.on('pointerdown', () => this.touchControls.press(direction))
+      const stop = () => this.touchControls.release(direction)
       button.on('pointerup', stop)
       button.on('pointerout', stop)
     })
 
-    const interact = this.add.rectangle(850, 550, 92, 64, 0x2f80ed, 0.9).setStrokeStyle(2, 0x8ed1ff)
+    const interact = this.add.rectangle(830, 540, 190, 112, 0x2f80ed, 0.92).setStrokeStyle(3, 0x8ed1ff)
     interact.setInteractive({ useHandCursor: true })
-    this.add.text(850, 550, 'INTERACT', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5)
+    this.add.text(830, 540, 'INTERACT', { fontSize: '20px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5)
     interact.on('pointerdown', () => {
       const nearby = this.findNearbyTarget()
       if (nearby) this.handleInteract(nearby)

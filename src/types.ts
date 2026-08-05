@@ -24,6 +24,7 @@ export interface ConceptRecord {
 export interface MasteryEvidenceConfig {
   conceptId: string
   evidenceType: EvidenceType
+  contextId: string
   firstAttemptRequired: boolean
   hintDisqualifies: boolean
   independent: boolean
@@ -42,6 +43,12 @@ export interface MissionActivity {
   options: MissionActivityOption[]
 }
 
+export interface MissionInvestigation {
+  title: string
+  body: string
+  discoveryConcepts: string[]
+}
+
 export interface MissionData {
   missionId: string
   title: string
@@ -49,7 +56,11 @@ export interface MissionData {
   objectives: string[]
   prerequisites: string[]
   concepts: string[]
+  briefing: string
+  investigations: MissionInvestigation[]
   activity: MissionActivity
+  hint: string
+  debrief: string
   masteryEvidence: MasteryEvidenceConfig[]
   rewards: {
     xp: number
@@ -75,6 +86,16 @@ export interface MissionAttemptState {
   rewardGranted: boolean
 }
 
+export type MissionStage = 'briefing' | 'investigation' | 'decision' | 'feedback' | 'debrief'
+
+export interface ActiveMissionState {
+  missionId: string
+  stage: MissionStage
+  investigationIndex: number
+  hintUsed: boolean
+  selectedOptionId: string | null
+}
+
 export interface SaveState {
   version: number
   playerId: string
@@ -84,6 +105,7 @@ export interface SaveState {
   completedMissions: string[]
   unlockedMissions: string[]
   missionAttempts: Record<string, MissionAttemptState>
+  activeMission: ActiveMissionState | null
   conceptProgress: Record<string, ConceptProgressState>
   settings: {
     sound: boolean

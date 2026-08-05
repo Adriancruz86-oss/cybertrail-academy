@@ -69,7 +69,8 @@ export class BootScene extends Phaser.Scene {
     startButton.on('pointerover', () => startButton.setFillStyle(0x4ea8de))
     startButton.on('pointerout', () => startButton.setFillStyle(0x2f80ed))
     startButton.on('pointerdown', () => {
-      this.scene.start('HubScene')
+      const activeMission = SaveService.get().activeMission
+      this.scene.start(activeMission ? 'MissionScene' : 'HubScene', activeMission ? { missionId: activeMission.missionId } : undefined)
     })
 
     if (hasProgress) {
@@ -82,8 +83,10 @@ export class BootScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
       newGame.on('pointerdown', () => {
-        SaveService.reset()
-        this.scene.restart()
+        if (window.confirm('Reset all mission, mastery, CyberDex, and XP progress? This cannot be undone.')) {
+          SaveService.reset()
+          this.scene.restart()
+        }
       })
     }
 

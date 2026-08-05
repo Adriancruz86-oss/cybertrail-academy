@@ -4,181 +4,148 @@ import { SaveService } from '../../services/saveService'
 import { MasteryService } from '../../services/masteryService'
 import { GameUI } from '../../ui/GameUI'
 import { ProgressionService } from '../../services/progressionService'
+import type { MissionActivityOption, MissionStage } from '../../types'
 
 type MissionSceneData = { missionId?: string }
 
 export class MissionScene extends Phaser.Scene {
   private missionId = ''
-  private attempted = false
   private optionButtons: Phaser.GameObjects.Container[] = []
+  private mobile = false
 
-  constructor() {
-    super('MissionScene')
-  }
+  constructor() { super('MissionScene') }
 
   init(data: MissionSceneData) {
-    this.missionId = data?.missionId ?? ''
-    if (!this.missionId) {
-      const save = SaveService.get()
-      this.missionId = ProgressionService.getNextMission(save)?.missionId ?? ''
-    }
+    const save = SaveService.get()
+    this.missionId = data?.missionId ?? save.activeMission?.missionId ?? ProgressionService.getNextMission(save)?.missionId ?? ''
   }
 
   create() {
-    this.attempted = false
-    this.optionButtons = []
-
+    this.mobile = window.matchMedia('(max-width: 600px)').matches
     const mission = ContentService.getMission(this.missionId)
-    if (!mission || !ProgressionService.isAvailable(SaveService.get(), this.missionId)) {
-      this.add.text(50, 120, 'Mission unavailable.', {
-        fontFamily: 'Arial',
-        fontSize: '24px',
-        color: '#ff6b6b'
-      })
+    const save = SaveService.get()
+    if (!mission || !ProgressionService.isAvailable(save, this.missionId)) {
+      this.add.text(40, 100, 'Mission unavailable.', { fontFamily: 'Arial', fontSize: '24px', color: '#ff6b6b' })
       return
     }
-
-    this.cameras.main.setBackgroundColor(0x08101c)
-
-    this.add.text(40, 30, mission.title, {
-      fontFamily: 'Arial',
-      fontSize: '28px',
-      color: '#ffffff',
-      fontStyle: 'bold'
-    })
-
-    this.add.text(40, 72, mission.description, {
-      fontFamily: 'Arial',
-      fontSize: '16px',
-      color: '#cbd4e6',
-      wordWrap: { width: 820 }
-    })
-
-    this.add.text(40, 150, mission.activity.prompt, {
-      fontFamily: 'Arial',
-      fontSize: '20px',
-      color: '#ffffff',
-      wordWrap: { width: 820 }
-    })
-
-    mission.activity.options.forEach((option, index) => {
-      const y = 220 + index * 90
-      const optionBackground = this.add.rectangle(0, 0, 620, 64, 0x2f80ed)
-      const optionText = this.add
-        .text(-300, 0, option.label, {
-          fontFamily: 'Arial',
-          fontSize: '18px',
-          color: '#ffffff',
-          wordWrap: { width: 560 }
-        })
-        .setOrigin(0, 0.5)
-
-      const optionContainer = this.add.container(320, y, [optionBackground, optionText])
-      optionContainer.setSize(620, 64)
-      optionContainer.setInteractive(
-        new Phaser.Geom.Rectangle(-310, -32, 620, 64),
-        Phaser.Geom.Rectangle.Contains,
-        true
-      )
-
-      optionContainer.on('pointerover', () => {
-        optionBackground.setFillStyle(0x4ea8de)
+    if (!save.activeMission || save.activeMission.missionId !== this.missionId) {
+      SaveService.update((state) => {
+        state.activeMission = { missionId: this.missionId, stage: 'briefing', investigationIndex: 0, hintUsed: false, selectedOptionId: null }
       })
-      optionContainer.on('pointerout', () => {
-        optionBackground.setFillStyle(0x2f80ed)
-      })
-      optionContainer.on('pointerdown', () => this.handleSelection(option))
-
-      this.optionButtons.push(optionContainer)
-    })
-
-    this.add
-      .text(40, 520, '', {
-        fontFamily: 'Arial',
-        fontSize: '18px',
-        color: '#cbd4e6',
-        wordWrap: { width: 820 }
-      })
-      .setName('resultText')
+    }
+    this.renderStage()
   }
 
-  private handleSelection(option: { correct: boolean; explanation: string }) {
-    if (this.attempted) {
-      return
+  private renderStage() {
+    this.children.removeAll()
+    this.optionButtons = []
+    this.cameras.main.setBackgroundColor(0x08101c)
+    const mission = ContentService.getMission(this.missionId)!
+    const session = SaveService.get().activeMission!
+
+    this.add.text(40, 28, mission.title, { fontFamily: 'Arial', fontSize: this.mobile ? '38px' : '28px', color: '#ffffff', fontStyle: 'bold' })
+    this.add.text(40, this.mobile ? 78 : 68, this.stageLabel(session.stage), { fontFamily: 'Arial', fontSize: this.mobile ? '25px' : '15px', color: '#8fd3ff', fontStyle: 'bold' })
+
+    if (session.stage === 'briefing') {
+      this.addBody(mission.briefing)
+      this.addAction('Begin investigation', () => this.setStage('investigation'))
+    } else if (session.stage === 'investigation') {
+      const item = mission.investigations[session.investigationIndex]
+      this.add.text(40, 120, item.title, { fontFamily: 'Arial', fontSize: this.mobile ? '34px' : '22px', color: '#ffffff', fontStyle: 'bold' })
+      this.addBody(item.body, 165)
+      SaveService.update((state) => item.discoveryConcepts.forEach((id) => MasteryService.recordExposure(state, id)))
+      this.refreshLearningUI()
+      const last = session.investigationIndex === mission.investigations.length - 1
+      this.addAction(last ? 'Make a decision' : 'Inspect next clue', () => {
+        if (last) this.setStage('decision')
+        else {
+          SaveService.update((state) => { if (state.activeMission) state.activeMission.investigationIndex += 1 })
+          this.renderStage()
+        }
+      })
+    } else if (session.stage === 'decision') {
+      this.renderDecision()
+    } else if (session.stage === 'feedback') {
+      const option = mission.activity.options.find((item) => item.id === session.selectedOptionId)!
+      this.addBody(option.explanation)
+      this.addAction(option.correct ? 'View debrief' : 'Try again', () => this.setStage(option.correct ? 'debrief' : 'decision'))
+    } else {
+      this.addBody(mission.debrief)
+      this.addAction('Complete mission', () => {
+        SaveService.update((state) => { state.activeMission = null })
+        this.refreshLearningUI()
+        this.scene.start('HubScene')
+      })
     }
+  }
 
-    this.attempted = true
-    this.disableOptions()
+  private renderDecision() {
+    const mission = ContentService.getMission(this.missionId)!
+    const session = SaveService.get().activeMission!
+    this.add.text(40, 112, mission.activity.prompt, { fontFamily: 'Arial', fontSize: this.mobile ? '32px' : '20px', color: '#ffffff', wordWrap: { width: 820 } })
+    mission.activity.options.forEach((option, index) => {
+      const y = 195 + index * 82
+      const bg = this.add.rectangle(0, 0, 700, 62, 0x2f80ed)
+      const text = this.add.text(-330, 0, option.label, { fontFamily: 'Arial', fontSize: this.mobile ? '30px' : '18px', color: '#ffffff', wordWrap: { width: 630 } }).setOrigin(0, 0.5)
+      const button = this.add.container(390, y, [bg, text]).setSize(700, 62).setInteractive(new Phaser.Geom.Rectangle(-350, -31, 700, 62), Phaser.Geom.Rectangle.Contains, true)
+      button.on('pointerdown', () => this.handleSelection(option))
+      this.optionButtons.push(button)
+    })
+    const hint = this.add.text(40, 470, session.hintUsed ? `Hint: ${mission.hint}` : 'Need a hint?', { fontFamily: 'Arial', fontSize: this.mobile ? '28px' : '17px', color: '#9fd4ff', wordWrap: { width: 800 } }).setInteractive({ useHandCursor: true })
+    hint.on('pointerdown', () => {
+      SaveService.update((state) => { if (state.activeMission) state.activeMission.hintUsed = true })
+      this.renderStage()
+    })
+  }
 
-    const resultText = this.children.getByName('resultText') as Phaser.GameObjects.Text
-    resultText.setText(option.explanation)
-    resultText.setColor(option.correct ? '#9ef0b4' : '#ffb4a2')
-
-    const mission = ContentService.getMission(this.missionId)
-    if (!mission) {
-      return
-    }
-
+  private handleSelection(option: MissionActivityOption) {
+    const mission = ContentService.getMission(this.missionId)!
+    const session = SaveService.get().activeMission!
+    this.optionButtons.forEach((button) => button.disableInteractive())
     SaveService.update((state) => {
       const isFirstAttempt = ProgressionService.recordAttempt(state, mission.missionId, option.correct)
-      mission.masteryEvidence.forEach((evidence) => {
-        MasteryService.recordAttempt(state, {
-          conceptId: evidence.conceptId,
-          missionId: mission.missionId,
-          evidenceType: evidence.evidenceType,
-          correct: option.correct,
-          firstAttempt: evidence.firstAttemptRequired ? isFirstAttempt : true,
-          hintUsed: false,
-          independent: evidence.independent
-        })
-      })
-      if (option.correct) {
-        mission.rewards.cyberDexEntries.forEach((conceptId) => MasteryService.recordExposure(state, conceptId))
-        ProgressionService.complete(state, mission.missionId, mission.rewards.xp)
+      mission.masteryEvidence.forEach((evidence) => MasteryService.recordAttempt(state, {
+        conceptId: evidence.conceptId,
+        missionId: mission.missionId,
+        contextId: evidence.contextId,
+        evidenceType: evidence.evidenceType,
+        correct: option.correct,
+        firstAttempt: evidence.firstAttemptRequired ? isFirstAttempt : true,
+        hintUsed: evidence.hintDisqualifies && session.hintUsed,
+        independent: evidence.independent
+      }))
+      if (option.correct) ProgressionService.complete(state, mission.missionId, mission.rewards.xp)
+      if (state.activeMission) {
+        state.activeMission.selectedOptionId = option.id
+        state.activeMission.stage = 'feedback'
       }
     })
-
-    if (option.correct) {
-      GameUI.get().showNotification('Mission complete. Return to the hub to continue.')
-    } else {
-      GameUI.get().showNotification('Incorrect choice. Review the explanation and return to the hub.')
-    }
-
-    GameUI.get().updateStatus(SaveService.get())
-    GameUI.get().updateCyberDex(ContentService.getAllConcepts(), SaveService.get().conceptProgress)
-    GameUI.get().updateCompetencyMatrix(ContentService.getAllConcepts(), SaveService.get().conceptProgress)
-
-    const continueBackground = this.add.rectangle(0, 0, 260, 56, 0x4ea8de)
-    const continueText = this.add
-      .text(0, 0, 'Return to Hub', {
-        fontFamily: 'Arial',
-        fontSize: '18px',
-        color: '#ffffff',
-        fontStyle: 'bold'
-      })
-      .setOrigin(0.5)
-
-    const continueButton = this.add.container(460, 580, [continueBackground, continueText])
-    continueButton.setSize(260, 56)
-    continueButton.setInteractive(
-      new Phaser.Geom.Rectangle(-130, -28, 260, 56),
-      Phaser.Geom.Rectangle.Contains,
-      true
-    )
-    continueButton.on('pointerdown', () => {
-      this.scene.start('HubScene')
-    })
+    this.refreshLearningUI()
+    this.renderStage()
   }
 
-  private disableOptions() {
-    this.optionButtons.forEach((button) => {
-      button.disableInteractive()
-      const bg = button.list.find((child) => child instanceof Phaser.GameObjects.Rectangle) as
-        | Phaser.GameObjects.Rectangle
-        | undefined
-      if (bg) {
-        bg.setFillStyle(0x1d4f9b)
-      }
-    })
+  private setStage(stage: MissionStage) {
+    SaveService.update((state) => { if (state.activeMission) state.activeMission.stage = stage })
+    this.renderStage()
+  }
+
+  private addBody(body: string, y = 125) {
+    this.add.text(40, y, body, { fontFamily: 'Arial', fontSize: this.mobile ? '34px' : '20px', color: '#dbeafe', lineSpacing: 8, wordWrap: { width: 820 } })
+  }
+
+  private addAction(label: string, action: () => void) {
+    const bg = this.add.rectangle(0, 0, 300, 64, 0x2f80ed)
+    const text = this.add.text(0, 0, label, { fontFamily: 'Arial', fontSize: this.mobile ? '28px' : '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5)
+    const button = this.add.container(480, 550, [bg, text]).setSize(300, 64).setInteractive(new Phaser.Geom.Rectangle(-150, -32, 300, 64), Phaser.Geom.Rectangle.Contains, true)
+    button.on('pointerdown', action)
+  }
+
+  private stageLabel(stage: MissionStage) { return stage.toUpperCase() }
+
+  private refreshLearningUI() {
+    const state = SaveService.get()
+    GameUI.get().updateStatus(state)
+    GameUI.get().updateCyberDex(ContentService.getAllConcepts(), state.conceptProgress)
+    GameUI.get().updateCompetencyMatrix(ContentService.getAllConcepts(), state.conceptProgress)
   }
 }

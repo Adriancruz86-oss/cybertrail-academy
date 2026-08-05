@@ -1,7 +1,7 @@
 import type { SaveState, ConceptProgressState } from '../types'
 
 const STORAGE_KEY = 'cybertrail-save-v1'
-const SAVE_VERSION = 2
+const SAVE_VERSION = 3
 
 export function createDefaultProgress(): ConceptProgressState {
   return {
@@ -27,6 +27,7 @@ export function createDefaultSave(): SaveState {
     completedMissions: [],
     unlockedMissions: ['splus-c1-m01'],
     missionAttempts: {},
+    activeMission: null,
     conceptProgress: {},
     settings: {
       sound: true,
@@ -39,16 +40,17 @@ export function createDefaultSave(): SaveState {
 function migrateSave(value: unknown): SaveState {
   if (!value || typeof value !== 'object') return createDefaultSave()
   const candidate = value as Partial<SaveState>
-  if (candidate.version === 1) {
+  if (candidate.version === 1 || candidate.version === 2) {
     return {
       ...createDefaultSave(),
       ...candidate,
       version: SAVE_VERSION,
-      missionAttempts: {}
+      missionAttempts: candidate.missionAttempts ?? {},
+      activeMission: null
     }
   }
   if (candidate.version !== SAVE_VERSION) return createDefaultSave()
-  return { ...createDefaultSave(), ...candidate, missionAttempts: candidate.missionAttempts ?? {} }
+  return { ...createDefaultSave(), ...candidate, missionAttempts: candidate.missionAttempts ?? {}, activeMission: candidate.activeMission ?? null }
 }
 
 let currentState: SaveState | null = null
@@ -88,6 +90,11 @@ export const SaveService = {
   reset(): SaveState {
     currentState = createDefaultSave()
     return this.save(currentState)
+  },
+
+  reload(): SaveState {
+    currentState = null
+    return this.load()
   },
 
   hasProgress(): boolean {

@@ -8,6 +8,11 @@ export const missions: MissionData[] = [
     objectives: ['Inspect SOC examples', 'Learn how these terms are related but not interchangeable.'],
     prerequisites: [],
     concepts: ['asset', 'threat', 'vulnerability', 'risk', 'security-control'],
+    briefing: 'Maya welcomes you to the SOC and asks you to learn the language analysts use to describe incidents.',
+    investigations: [
+      { title: 'Inspect the protected system', body: 'The database server stores BrightPath student records. The records and the server have value to the organization.', discoveryConcepts: ['asset'] },
+      { title: 'Inspect the incident board', body: 'Ransomware could harm the server, while a missing patch creates a weakness it could exploit.', discoveryConcepts: ['threat', 'vulnerability', 'risk', 'security-control'] }
+    ],
     activity: {
       type: 'classification',
       prompt: 'Which of these is the asset?',
@@ -32,10 +37,13 @@ export const missions: MissionData[] = [
         }
       ]
     },
+    hint: 'An asset is the valuable thing the organization wants to protect.',
+    debrief: 'Assets have value. Threats can cause harm, vulnerabilities are weaknesses, risk combines likelihood and impact, and controls reduce risk.',
     masteryEvidence: [
       {
         conceptId: 'asset',
         evidenceType: 'recognition',
+        contextId: 'soc-object-classification',
         firstAttemptRequired: false,
         hintDisqualifies: true,
         independent: false
@@ -52,7 +60,12 @@ export const missions: MissionData[] = [
     description: 'External users cannot reach BrightPath Learning. Investigate where access is blocked.',
     objectives: ['Find why the site is unavailable externally', 'Allow the right inbound traffic while keeping the network secure.'],
     prerequisites: ['splus-c1-m01'],
-    concepts: ['https', 'tcp-443', 'firewall-rule', 'inbound-traffic'],
+    concepts: ['https', 'tcp-443', 'firewall-rule', 'inbound-traffic', 'least-functionality'],
+    briefing: 'BrightPath Learning reports that external users cannot reach its portal. Investigate before changing the firewall.',
+    investigations: [
+      { title: 'Check the web server', body: 'The server is online and internal users can load the portal.', discoveryConcepts: ['https'] },
+      { title: 'Check DNS and the firewall', body: 'DNS resolves correctly, but inbound TCP port 443 is blocked at the firewall.', discoveryConcepts: ['tcp-443', 'firewall-rule', 'inbound-traffic', 'least-functionality'] }
+    ],
     activity: {
       type: 'configuration',
       prompt: 'Choose the firewall rule that restores external HTTPS access while limiting exposure.',
@@ -77,10 +90,13 @@ export const missions: MissionData[] = [
         }
       ]
     },
+    hint: 'HTTPS normally reaches a web server over TCP port 443. Change only what the service needs.',
+    debrief: 'You restored HTTPS without exposing unrelated services. Narrow inbound rules preserve required access while reducing risk.',
     masteryEvidence: [
       {
         conceptId: 'tcp-443',
         evidenceType: 'application',
+        contextId: 'brightpath-outage-port-rule',
         firstAttemptRequired: true,
         hintDisqualifies: true,
         independent: true
@@ -88,6 +104,15 @@ export const missions: MissionData[] = [
       {
         conceptId: 'firewall-rule',
         evidenceType: 'application',
+        contextId: 'brightpath-outage-port-rule',
+        firstAttemptRequired: true,
+        hintDisqualifies: true,
+        independent: true
+      },
+      {
+        conceptId: 'least-functionality',
+        evidenceType: 'application',
+        contextId: 'brightpath-minimal-restoration',
         firstAttemptRequired: true,
         hintDisqualifies: true,
         independent: true
@@ -95,7 +120,7 @@ export const missions: MissionData[] = [
     ],
     rewards: {
       xp: 120,
-      cyberDexEntries: ['https', 'tcp-443', 'firewall-rule', 'inbound-traffic']
+      cyberDexEntries: ['https', 'tcp-443', 'firewall-rule', 'inbound-traffic', 'least-functionality']
     }
   },
   {
@@ -105,6 +130,11 @@ export const missions: MissionData[] = [
     objectives: ['Reject the risky shortcut', 'Choose a narrow rule that supports only needed traffic.'],
     prerequisites: ['splus-c1-m02'],
     concepts: ['attack-surface', 'least-functionality', 'implicit-deny', 'allowlisting'],
+    briefing: 'The portal is restored, but an employee proposes opening every inbound port as a permanent shortcut.',
+    investigations: [
+      { title: 'Review the proposal', body: 'The proposed rule would expose services that BrightPath does not need public users to reach.', discoveryConcepts: ['attack-surface', 'least-functionality'] },
+      { title: 'Review the default policy', body: 'The firewall blocks traffic unless a specific rule allows it. Approved traffic can be allowlisted.', discoveryConcepts: ['implicit-deny', 'allowlisting'] }
+    ],
     activity: {
       type: 'configuration',
       prompt: 'What is the better decision?',
@@ -129,10 +159,13 @@ export const missions: MissionData[] = [
         }
       ]
     },
+    hint: 'Prefer the smallest change that supports the secure portal and nothing more.',
+    debrief: 'Least functionality limits exposure. An implicit-deny policy plus a narrow allow rule supports the portal without opening unnecessary paths.',
     masteryEvidence: [
       {
         conceptId: 'least-functionality',
         evidenceType: 'reasoning',
+        contextId: 'unsafe-shortcut-review',
         firstAttemptRequired: true,
         hintDisqualifies: true,
         independent: true
@@ -140,6 +173,7 @@ export const missions: MissionData[] = [
       {
         conceptId: 'attack-surface',
         evidenceType: 'reasoning',
+        contextId: 'unsafe-shortcut-review',
         firstAttemptRequired: true,
         hintDisqualifies: true,
         independent: true

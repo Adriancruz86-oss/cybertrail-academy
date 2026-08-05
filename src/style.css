@@ -26,10 +26,12 @@ html[data-reduced-motion='true'] *::before,
 html[data-reduced-motion='true'] *::after { animation: none !important; transition: none !important; }
 
 #app {
-  width: 100vw;
+  width: calc(100vw - 352px);
   height: 100vh;
   position: relative;
 }
+
+#app canvas { display: block; touch-action: none; }
 
 #game-ui {
   position: absolute;
@@ -54,6 +56,9 @@ html[data-reduced-motion='true'] *::after { animation: none !important; transiti
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   pointer-events: auto;
 }
+
+.status-panel:empty,
+.mission-panel:empty { display: none; }
 
 .panel-header {
   font-size: 14px;
@@ -173,6 +178,20 @@ html[data-reduced-motion='true'] *::after { animation: none !important; transiti
     margin: 12px;
   }
 
-  #app { min-height: 60vh; height: 70vh; }
+  #app { width: 100vw; height: auto; aspect-ratio: 3 / 2; max-height: 72vh; }
   .sidebar-panel { max-height: 45vh; overflow-y: auto; }
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+  #game-ui { margin: 8px; gap: 8px; }
+  #app { max-height: none; aspect-ratio: 3 / 2; }
+  .status-panel, .mission-panel, .sidebar-panel { padding: 12px; }
+  .setting-button { min-height: 44px; }
+  .notification-panel { width: calc(100% - 24px); text-align: center; bottom: 12px; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  #app { width: 70vw; height: 100vh; max-height: none; }
+  #game-ui { position: absolute; right: 0; top: 0; width: 30vw; max-height: 100vh; margin: 0; overflow-y: auto; }
+  .sidebar-panel { max-height: none; }
 }

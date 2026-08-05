@@ -88,7 +88,7 @@ export class GameUI {
 
   updateCyberDex(concepts: Record<string, ConceptRecord>, progress: SaveState['conceptProgress']) {
     const entries = Object.values(concepts)
-      .filter((concept) => progress[concept.conceptId]?.status !== 'unknown')
+      .filter((concept) => Boolean(progress[concept.conceptId] && progress[concept.conceptId].status !== 'unknown'))
       .slice(0, 8)
 
     if (entries.length === 0) {
@@ -112,7 +112,7 @@ export class GameUI {
 
   updateCompetencyMatrix(concepts: Record<string, ConceptRecord>, progress: SaveState['conceptProgress']) {
     const tiles = Object.values(concepts)
-      .filter((concept) => progress[concept.conceptId]?.status !== 'unknown')
+      .filter((concept) => Boolean(progress[concept.conceptId] && progress[concept.conceptId].status !== 'unknown'))
       .slice(0, 12)
 
     if (tiles.length === 0) {

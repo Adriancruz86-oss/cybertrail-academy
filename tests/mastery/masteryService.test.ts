@@ -4,7 +4,7 @@ import type { SaveState } from '../../src/types'
 
 function createTestState(): SaveState {
   return {
-    version: 2,
+    version: 3,
     playerId: 'test',
     displayName: 'Analyst',
     rank: 'analyst-trainee',
@@ -12,6 +12,7 @@ function createTestState(): SaveState {
     completedMissions: [],
     unlockedMissions: ['splus-c1-m01'],
     missionAttempts: {},
+    activeMission: null,
     conceptProgress: {},
     settings: {
       sound: false,
@@ -79,14 +80,21 @@ describe('MasteryService', () => {
     expect(state.conceptProgress.asset.currentCompetencyStreak).toBe(0)
   })
 
-  it('awards mastery only in a later qualifying context', () => {
+  it('awards mastery only in a delayed qualifying context', () => {
     const state = createTestState()
     for (const [index, missionId] of ['m1', 'm2', 'm3'].entries()) {
       MasteryService.recordAttempt(state, {
         conceptId: 'risk', missionId, evidenceType: 'reasoning', correct: true,
-        firstAttempt: true, hintUsed: false, independent: true, now: 1000 + index
+        firstAttempt: true, hintUsed: false, independent: true, now: index < 2 ? 1000 + index : 8 * 24 * 60 * 60 * 1000
       })
     }
     expect(state.conceptProgress.risk.status).toBe('mastered')
+  })
+
+  it('resets a streak on a later incorrect independent attempt', () => {
+    const state = createTestState()
+    MasteryService.recordAttempt(state, { conceptId: 'risk', missionId: 'm1', evidenceType: 'application', correct: true, firstAttempt: true, hintUsed: false, independent: true })
+    MasteryService.recordAttempt(state, { conceptId: 'risk', missionId: 'm2', evidenceType: 'application', correct: false, firstAttempt: false, hintUsed: false, independent: true })
+    expect(state.conceptProgress.risk.currentCompetencyStreak).toBe(0)
   })
 })

@@ -9,11 +9,13 @@ describe('SaveService', () => {
   it('persists and restores save state', () => {
     const state = SaveService.reset()
     state.xp = 120
+    state.activeMission = { missionId: 'splus-c1-m01', stage: 'investigation', investigationIndex: 1, hintUsed: false, selectedOptionId: null }
     SaveService.save(state)
 
-    const loaded = SaveService.load()
+    const loaded = SaveService.reload()
     expect(loaded.xp).toBe(120)
     expect(loaded.playerId).toBe('local-player')
     expect(loaded.unlockedMissions).toContain('splus-c1-m01')
+    expect(loaded.activeMission?.investigationIndex).toBe(1)
   })
 })

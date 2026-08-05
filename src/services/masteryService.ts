@@ -16,7 +16,7 @@ function updateStatusForCorrect(progress: ConceptProgressState, evidenceType: Ev
     progress.reasoningSuccesses += 1
   }
 
-  if (progress.status === 'competent' && progress.lastReviewed && now > progress.lastReviewed) {
+  if (progress.status === 'competent' && progress.nextReview && now >= progress.nextReview) {
     progress.status = 'mastered'
   } else if (progress.currentCompetencyStreak >= 2) {
     progress.status = 'competent'
@@ -42,6 +42,7 @@ export const MasteryService = {
   recordAttempt(state: SaveState, args: {
     conceptId: string
     missionId: string
+    contextId?: string
     evidenceType: EvidenceType
     correct: boolean
     firstAttempt: boolean
@@ -56,28 +57,26 @@ export const MasteryService = {
       return progress
     }
 
-    if (!args.firstAttempt || args.hintUsed || !args.independent) {
-      return progress
-    }
-
+    const qualifying = args.firstAttempt && !args.hintUsed && args.independent
     if (!['application', 'reasoning', 'assessment'].includes(args.evidenceType)) {
       return progress
     }
 
     if (!args.correct) {
-      progress.currentCompetencyStreak = 0
-      progress.mistakes.push({
-        missionId: args.missionId,
-        note: `Incorrect first attempt for ${args.evidenceType}`,
-        timestamp: Date.now()
-      })
+      if (args.independent) {
+        progress.currentCompetencyStreak = 0
+        progress.mistakes.push({ missionId: args.missionId, note: `Incorrect attempt for ${args.evidenceType}`, timestamp: Date.now() })
+      }
       return progress
     }
 
-    const differentContext = progress.lastSuccessfulMissionId !== args.missionId
+    if (!qualifying) return progress
+
+    const contextId = args.contextId ?? args.missionId
+    const differentContext = progress.lastSuccessfulMissionId !== contextId
     if (differentContext) {
       progress.currentCompetencyStreak += 1
-      progress.lastSuccessfulMissionId = args.missionId
+      progress.lastSuccessfulMissionId = contextId
     }
 
     updateStatusForCorrect(progress, args.evidenceType, args.now ?? Date.now())
